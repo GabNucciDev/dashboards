@@ -15,6 +15,7 @@ const state = {
   editingCategoryId: null,
   editingBudgetId: null,
   editingTransactionId: null,
+  onboardingAutoShown: false,
 };
 
 const el = {
@@ -75,6 +76,15 @@ const el = {
   editTxCurrency: byId('editTxCurrency'),
   editTxDescription: byId('editTxDescription'),
   btnSaveTransactionEdit: byId('btnSaveTransactionEdit'),
+
+  btnLogin: byId('btnLogin'),
+  btnOpenOnboarding: byId('btnOpenOnboarding'),
+  onboardingModal: byId('onboardingModal'),
+  btnStartOnboarding: byId('btnStartOnboarding'),
+  activeHouseholdCard: byId('activeHouseholdCard'),
+  activeHouseholdName: byId('activeHouseholdName'),
+  activeHouseholdId: byId('activeHouseholdId'),
+  btnCopyHouseholdId: byId('btnCopyHouseholdId'),
 };
 
 bindEvents();
@@ -131,6 +141,9 @@ function bindEvents() {
   bindClick('btnAddTransaction', addTransaction);
   bindClick('btnSaveCategoryEdit', saveCategoryEdit);
   bindClick('btnSaveTransactionEdit', saveTransactionEdit);
+  bindClick('btnOpenOnboarding', () => openModal('onboardingModal'));
+  bindClick('btnStartOnboarding', startOnboarding);
+  bindClick('btnCopyHouseholdId', copyActiveHouseholdId);
 
   if (el.selectedMonth) {
     el.selectedMonth.addEventListener('change', async (e) => {
@@ -153,6 +166,12 @@ function bindEvents() {
   if (el.transactionModal) {
     el.transactionModal.addEventListener('click', (e) => {
       if (e.target === el.transactionModal) closeModal('transactionModal');
+    });
+  }
+
+  if (el.onboardingModal) {
+    el.onboardingModal.addEventListener('click', (e) => {
+      if (e.target === el.onboardingModal) closeModal('onboardingModal');
     });
   }
 }
@@ -195,9 +214,12 @@ async function login() {
     return;
   }
 
+  setButtonLoading(el.btnLogin, true, 'Entrando');
+
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    setButtonLoading(el.btnLogin, false);
     showAuthMessage(mapSupabaseError(error), 'error');
   }
 }
@@ -571,6 +593,8 @@ async function addTransaction() {
 function renderAuthState() {
   closeModal('categoryModal');
   closeModal('transactionModal');
+  closeModal('onboardingModal');
+  setButtonLoading(el.btnLogin, false);
 
   if (el.authView) el.authView.hidden = false;
   if (el.signupView) el.signupView.hidden = false;
@@ -585,6 +609,7 @@ function renderAuthState() {
 function renderApp() {
   if (!el.appView) return;
 
+  setButtonLoading(el.btnLogin, false);
   if (el.authView) el.authView.hidden = true;
   if (el.appView) el.appView.hidden = false;
 
@@ -592,10 +617,12 @@ function renderApp() {
   if (el.currentUserEmail) el.currentUserEmail.textContent = state.user?.email || '';
 
   renderHouseholds();
+  renderActiveHouseholdCard();
   renderScopeFilters();
   renderOwnerScopeOptions();
   renderCategoryOptions();
   renderDashboard();
+  maybeAutoOpenOnboarding();
 }
 
 function renderHouseholds() {
@@ -621,6 +648,39 @@ function renderHouseholds() {
     });
     el.householdList.appendChild(button);
   });
+}
+
+function renderActiveHouseholdCard() {
+  if (!el.activeHouseholdCard || !el.activeHouseholdName || !el.activeHouseholdId) return;
+
+  const activeHousehold = state.households.find((item) => item.household_id === state.activeHouseholdId);
+
+  if (!state.activeHouseholdId || !activeHousehold) {
+    el.activeHouseholdCard.hidden = true;
+    el.activeHouseholdName.textContent = 'Casa ativa';
+    el.activeHouseholdId.textContent = '—';
+    return;
+  }
+
+  el.activeHouseholdCard.hidden = false;
+  el.activeHouseholdName.textContent = activeHousehold.name;
+  el.activeHouseholdId.textContent = state.activeHouseholdId;
+}
+
+async function copyActiveHouseholdId() {
+  clearMessages();
+
+  if (!state.activeHouseholdId) {
+    showAppMessage('Nenhuma casa ativa para copiar.', 'error');
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(state.activeHouseholdId);
+    showAppMessage('ID da casa copiado com sucesso.', 'success');
+  } catch (error) {
+    showAppMessage('Não foi possível copiar automaticamente. Copie o ID manualmente.', 'error');
+  }
 }
 
 function renderScopeFilters() {
@@ -1047,6 +1107,43 @@ function closeModal(id) {
   if (id === 'transactionModal') {
     state.editingTransactionId = null;
   }
+
+  if (id === 'onboardingModal') {
+    window.localStorage.setItem(getOnboardingStorageKey(), 'seen');
+  }
+}
+
+function maybeAutoOpenOnboarding() {
+  if (!el.onboardingModal || !state.user || state.onboardingAutoShown) return;
+  const seenKey = getOnboardingStorageKey();
+  if (window.localStorage.getItem(seenKey) === 'seen') return;
+
+  state.onboardingAutoShown = true;
+  openModal('onboardingModal');
+}
+
+function startOnboarding() {
+  closeModal('onboardingModal');
+  if (el.householdName) el.householdName.focus();
+}
+
+function getOnboardingStorageKey() {
+  return `soma_onboarding_seen:${state.user?.id || 'anon'}`;
+}
+
+function setButtonLoading(button, isLoading, label = 'Carregando') {
+  if (!button) return;
+  const defaultLabel = button.dataset.defaultLabel || button.textContent.trim();
+  button.dataset.defaultLabel = defaultLabel;
+  button.disabled = isLoading;
+
+  if (isLoading) {
+    button.classList.add('is-loading');
+    button.innerHTML = `<span class="btn-loader" aria-hidden="true"></span><span>${escapeHtml(label)}</span>`;
+  } else {
+    button.classList.remove('is-loading');
+    button.textContent = defaultLabel;
+  }
 }
 
 function clearMessages() {
@@ -1080,6 +1177,7 @@ function resetStateAfterLogout() {
   state.editingCategoryId = null;
   state.editingBudgetId = null;
   state.editingTransactionId = null;
+  state.onboardingAutoShown = false;
 }
 
 function resolveScopeSelection(value) {
