@@ -387,9 +387,9 @@
 
   <script>
     const CONFIG = {
-      // Troque pela URL CSV publicada da sua planilha.
-      // Exemplo: https://docs.google.com/spreadsheets/d/e/SEU_ID/pub?output=csv
-      sheetCsvUrl: 'COLE_AQUI_SUA_URL_CSV',
+      // Você pode usar a URL publicada em CSV OU a URL normal de edição da planilha.
+      // O script tenta converter automaticamente para CSV quando recebe uma URL /edit.
+      sheetCsvUrl: 'https://docs.google.com/spreadsheets/d/17F67tetUv3_K7rt5kbUJ1iJkehssOcCtprwjc6kWUxU/edit?gid=0#gid=0',
       currency: 'EUR',
       locale: 'pt-BR',
       refreshMinutes: 10,
@@ -411,6 +411,24 @@
 
     function formatPercent(value) {
       return `${Number(value || 0).toFixed(1)}%`;
+    }
+
+    function getSheetCsvUrl(inputUrl) {
+      const raw = String(inputUrl || '').trim();
+      if (!raw) return '';
+      if (raw.includes('/pub?output=csv') || raw.includes('/export?format=csv')) return raw;
+
+      try {
+        const url = new URL(raw);
+        const match = url.pathname.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        if (!match) return raw;
+
+        const spreadsheetId = match[1];
+        const gid = url.searchParams.get('gid') || '0';
+        return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`;
+      } catch {
+        return raw;
+      }
     }
 
     function showError(message) {
@@ -695,23 +713,23 @@
       hideError();
 
       if (!CONFIG.sheetCsvUrl || CONFIG.sheetCsvUrl.includes('COLE_AQUI')) {
-        showError('Você ainda não configurou a URL CSV da planilha publicada. Edite a constante CONFIG.sheetCsvUrl no início do JavaScript.');
+        showError('Você ainda não configurou a URL da planilha. Edite a constante CONFIG.sheetCsvUrl no início do JavaScript.');
         $('#sheetStatus').textContent = 'URL da planilha não configurada.';
         return;
       }
 
       try {
-        $('#sheetStatus').textContent = 'Buscando dados da planilha publicada...';
+        $('#sheetStatus').textContent = 'Buscando dados da planilha...';
 
-        const response = await fetch(CONFIG.sheetCsvUrl, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`Falha ao ler planilha: HTTP ${response.status}`);
+        const response = await fetch(getSheetCsvUrl(CONFIG.sheetCsvUrl), { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Falha ao ler planilha: HTTP ${response.status}. Verifique se a planilha está pública ou publicada para acesso externo`);
 
         const csvText = await response.text();
         const rows = parseCSV(csvText);
         const items = mapRows(rows);
 
         if (!items.length) {
-          throw new Error('A planilha foi lida, mas nenhuma linha válida foi reconhecida. Revise a estrutura dos dados.');
+          throw new Error('A planilha foi lida, mas nenhuma linha válida foi reconhecida. Revise a estrutura da aba e evite células mescladas ou cabeçalhos decorativos.');
         }
 
         state.items = items;
