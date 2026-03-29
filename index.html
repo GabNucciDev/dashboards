@@ -76,121 +76,98 @@
     </section>
 
     <section id="appView" hidden>
-      <div class="shell">
-        <header class="topbar surface">
-          <div class="topbar-left">
-            <div class="brand-inline">
-              <span class="brand-inline-name">SOMA</span>
-              <span class="brand-inline-subtitle">Casa, individual e compartilhado</span>
-            </div>
-            <div class="user-inline">
-              <strong id="currentUserName">Usuário</strong>
-              <span id="currentUserEmail">email</span>
-            </div>
+      <div class="workspace">
+        <aside class="sidebar surface">
+          <div class="sidebar-brand">
+            <span class="brand-inline-name">SOMA</span>
+            <span class="brand-inline-subtitle">Casa, individual e compartilhado</span>
           </div>
 
-          <div class="topbar-right">
-            <div class="field compact-field compact-month">
-              <label for="selectedMonth">Mês de referência</label>
-              <input id="selectedMonth" type="month" />
-            </div>
-            <button class="btn btn-secondary" id="btnOpenOnboarding">Primeiros passos</button>
-            <button class="btn btn-secondary" id="btnLogout">Sair</button>
-          </div>
-        </header>
-
-        <div id="appMessage"></div>
-
-        <section class="surface section-block">
-          <div class="section-head">
-            <div>
-              <span class="eyebrow">Casa</span>
-              <h3>Sua estrutura compartilhada</h3>
-              <p class="section-subtitle">Crie uma casa, pegue o ID e convide a outra pessoa para entrar.</p>
-            </div>
+          <div class="sidebar-group">
+            <span class="sidebar-group-title">Menu principal</span>
+            <button class="nav-link active" type="button" data-screen-target="overview">Visão financeira</button>
+            <button class="nav-link" type="button" data-screen-target="categories">Cadastro de categoria</button>
+            <button class="nav-link" type="button" data-screen-target="transactions">Lançamentos</button>
+            <button class="nav-link" type="button" data-screen-target="budget">Orçamento</button>
+            <button class="nav-link" type="button" data-screen-target="history">Histórico</button>
           </div>
 
-          <div class="grid grid-2 equal-grid">
-            <div class="form-card inner-card">
-              <div class="field">
-                <label for="householdName">Criar nova casa</label>
-                <input id="householdName" type="text" placeholder="Ex.: Casa Gabriel &amp; Maria" />
-              </div>
-              <div class="form-actions">
-                <button class="btn btn-primary" id="btnCreateHousehold">Criar casa</button>
+          <div class="sidebar-group sidebar-settings-group">
+            <span class="sidebar-group-title">Configurações</span>
+            <button class="nav-link" type="button" data-screen-target="settings">Casa e acesso</button>
+          </div>
+        </aside>
+
+        <div class="content-shell">
+          <header class="topbar surface">
+            <div class="topbar-left">
+              <div class="user-inline no-divider">
+                <strong id="currentUserName">Usuário</strong>
+                <span id="currentUserEmail">email</span>
               </div>
             </div>
 
-            <div class="form-card inner-card">
-              <div class="field">
-                <label for="joinHouseholdId">Entrar em casa existente</label>
-                <input id="joinHouseholdId" type="text" placeholder="Cole o ID da casa aqui" />
+            <div class="topbar-right">
+              <div class="month-inline">
+                <span>Mês de referência</span>
+                <input id="selectedMonth" type="month" />
               </div>
-              <div class="form-actions">
-                <button class="btn btn-secondary" id="btnJoinHousehold">Entrar na casa</button>
+              <button class="btn btn-secondary" id="btnOpenOnboarding">Primeiros passos</button>
+              <button class="btn btn-secondary" id="btnLogout">Sair</button>
+            </div>
+          </header>
+
+          <div id="appMessage"></div>
+
+          <section class="surface section-block" data-screen="overview">
+            <div class="section-head compact-head">
+              <div>
+                <span class="eyebrow">Visão financeira</span>
+                <h3 id="currentViewTitle">Visão da casa</h3>
+                <p class="section-subtitle" id="currentViewSubtitle">Escolha qual caixa financeira quer analisar agora. O SOMA separa casa, pessoas e compartilhado.</p>
               </div>
             </div>
-          </div>
 
-          <div class="household-toolbar">
-            <div class="mini-label">Casas disponíveis</div>
-            <div class="household-list" id="householdList"></div>
-          </div>
-
-          <div class="active-household-card inner-card" id="activeHouseholdCard" hidden>
-            <div class="active-household-copy">
-              <span class="mini-label">ID da casa ativa</span>
-              <strong id="activeHouseholdName">Casa ativa</strong>
-              <code id="activeHouseholdId">—</code>
-              <p class="section-subtitle">Guarde esse ID. É ele que a outra pessoa usa para entrar na mesma casa depois.</p>
+            <div class="view-guide-callout inner-card">
+              <strong>Como ler isso sem se perder</strong>
+              <p>
+                <b>Casa</b> mostra o quadro completo. <b>Cada pessoa</b> mostra só o que pertence a ela.
+                <b>Compartilhado</b> mostra apenas o que é dos dois. Escolha uma visão abaixo para trocar o recorte do mês.
+              </p>
             </div>
-            <div class="active-household-actions">
-              <button class="btn btn-secondary" id="btnCopyHouseholdId" type="button">Copiar ID</button>
-            </div>
-          </div>
-        </section>
 
-        <section class="surface section-block">
-          <div class="section-head compact-head">
-            <div>
-              <span class="eyebrow">Visão financeira</span>
-              <h3 id="currentViewTitle">Visão da casa</h3>
-              <p class="section-subtitle" id="currentViewSubtitle">Escolha se quer analisar a casa inteira, uma pessoa específica ou apenas o compartilhado.</p>
-            </div>
-          </div>
+            <div class="scope-filters" id="scopeFilters"></div>
+          </section>
 
-          <div class="scope-filters" id="scopeFilters"></div>
-        </section>
+          <section class="stats-grid" data-screen="overview">
+            <article class="surface metric-card">
+              <span class="metric-label">Limite do mês</span>
+              <strong class="metric-value" id="totalBudget">R$ 0,00</strong>
+              <span class="metric-foot">No recorte da visão atual.</span>
+            </article>
+            <article class="surface metric-card">
+              <span class="metric-label">Gasto do mês</span>
+              <strong class="metric-value" id="totalSpent">R$ 0,00</strong>
+              <span class="metric-foot">Somente os lançamentos dessa visão.</span>
+            </article>
+            <article class="surface metric-card">
+              <span class="metric-label">Saldo do mês</span>
+              <strong class="metric-value" id="totalRemaining">R$ 0,00</strong>
+              <span class="metric-foot">Quanto ainda resta nessa caixa financeira.</span>
+            </article>
+            <article class="surface metric-card">
+              <span class="metric-label">Categorias ativas</span>
+              <strong class="metric-value" id="totalCategories">0</strong>
+              <span class="metric-foot">Categorias com limite no recorte atual.</span>
+            </article>
+          </section>
 
-        <section class="stats-grid">
-          <article class="surface metric-card">
-            <span class="metric-label">Limite do mês</span>
-            <strong class="metric-value" id="totalBudget">R$ 0,00</strong>
-            <span class="metric-foot">Na moeda padrão da visão atual.</span>
-          </article>
-          <article class="surface metric-card">
-            <span class="metric-label">Gasto do mês</span>
-            <strong class="metric-value" id="totalSpent">R$ 0,00</strong>
-            <span class="metric-foot">Somente os lançamentos da visão selecionada.</span>
-          </article>
-          <article class="surface metric-card">
-            <span class="metric-label">Saldo do mês</span>
-            <strong class="metric-value" id="totalRemaining">R$ 0,00</strong>
-            <span class="metric-foot">Quanto ainda resta dentro dessa caixa financeira.</span>
-          </article>
-          <article class="surface metric-card">
-            <span class="metric-label">Categorias ativas</span>
-            <strong class="metric-value" id="totalCategories">0</strong>
-            <span class="metric-foot">Categorias com limite no recorte atual.</span>
-          </article>
-        </section>
-
-        <section class="grid grid-2 equal-grid">
-          <div class="surface section-block">
+          <section class="surface section-block" data-screen="categories" hidden>
             <div class="section-head compact-head">
               <div>
                 <span class="eyebrow">Cadastro</span>
                 <h3>Criar categoria e limite do mês</h3>
+                <p class="section-subtitle">Defina primeiro a caixa financeira onde essa categoria vive.</p>
               </div>
             </div>
 
@@ -223,13 +200,14 @@
             <div class="form-actions">
               <button class="btn btn-primary" id="btnCreateCategory">Salvar categoria</button>
             </div>
-          </div>
+          </section>
 
-          <div class="surface section-block">
+          <section class="surface section-block" data-screen="transactions" hidden>
             <div class="section-head compact-head">
               <div>
                 <span class="eyebrow">Lançamentos</span>
                 <h3>Adicionar gasto</h3>
+                <p class="section-subtitle">Escolha a categoria certa e registre o gasto do mês.</p>
               </div>
             </div>
 
@@ -267,30 +245,79 @@
             <div class="form-actions">
               <button class="btn btn-primary" id="btnAddTransaction">Salvar gasto</button>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section class="surface section-block table-block">
-          <div class="section-head">
-            <div>
-              <span class="eyebrow">Orçamento</span>
-              <h3>Limites por categoria no mês</h3>
-              <p class="section-subtitle">Agora organizados por escopo financeiro, com edição e exclusão.</p>
+          <section class="surface section-block table-block" data-screen="budget" hidden>
+            <div class="section-head">
+              <div>
+                <span class="eyebrow">Orçamento</span>
+                <h3>Limites por categoria no mês</h3>
+                <p class="section-subtitle">Organizados por caixa financeira, com edição e exclusão.</p>
+              </div>
             </div>
-          </div>
-          <div id="budgetsTable"></div>
-        </section>
+            <div id="budgetsTable"></div>
+          </section>
 
-        <section class="surface section-block table-block">
-          <div class="section-head">
-            <div>
-              <span class="eyebrow">Histórico</span>
-              <h3>Lançamentos do mês</h3>
-              <p class="section-subtitle">Edite ou exclua gastos dentro da visão selecionada.</p>
+          <section class="surface section-block table-block" data-screen="history" hidden>
+            <div class="section-head">
+              <div>
+                <span class="eyebrow">Histórico</span>
+                <h3>Lançamentos do mês</h3>
+                <p class="section-subtitle">Edite ou exclua gastos dentro da visão selecionada.</p>
+              </div>
             </div>
-          </div>
-          <div id="transactionsTable"></div>
-        </section>
+            <div id="transactionsTable"></div>
+          </section>
+
+          <section class="surface section-block" data-screen="settings" hidden>
+            <div class="section-head">
+              <div>
+                <span class="eyebrow">Configurações</span>
+                <h3>Casa e acesso</h3>
+                <p class="section-subtitle">É aqui que você cria a casa, entra em outra e copia o ID quando precisar convidar alguém.</p>
+              </div>
+            </div>
+
+            <div class="grid grid-2 equal-grid">
+              <div class="form-card inner-card">
+                <div class="field">
+                  <label for="householdName">Criar nova casa</label>
+                  <input id="householdName" type="text" placeholder="Ex.: Casa Gabriel &amp; Maria" />
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn-primary" id="btnCreateHousehold">Criar casa</button>
+                </div>
+              </div>
+
+              <div class="form-card inner-card">
+                <div class="field">
+                  <label for="joinHouseholdId">Entrar em casa existente</label>
+                  <input id="joinHouseholdId" type="text" placeholder="Cole o ID da casa aqui" />
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn-secondary" id="btnJoinHousehold">Entrar na casa</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="household-toolbar">
+              <div class="mini-label">Casas disponíveis</div>
+              <div class="household-list" id="householdList"></div>
+            </div>
+
+            <div class="active-household-card inner-card" id="activeHouseholdCard" hidden>
+              <div class="active-household-copy">
+                <span class="mini-label">ID da casa ativa</span>
+                <strong id="activeHouseholdName">Casa ativa</strong>
+                <code id="activeHouseholdId">—</code>
+                <p class="section-subtitle">Guarde esse ID. É ele que a outra pessoa usa para entrar na mesma casa depois.</p>
+              </div>
+              <div class="active-household-actions">
+                <button class="btn btn-secondary" id="btnCopyHouseholdId" type="button">Copiar ID</button>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
 
       <div class="modal-backdrop" id="categoryModal" hidden>
@@ -383,45 +410,69 @@
           </div>
         </div>
       </div>
+
       <div class="modal-backdrop" id="onboardingModal" hidden>
-        <div class="modal-card onboarding-card">
+        <div class="modal-card onboarding-card onboarding-wizard-card">
           <div class="modal-head">
             <div>
-              <span class="eyebrow">Primeiros passos</span>
-              <h3>Comece pelo básico</h3>
+              <span class="eyebrow" id="onboardingStepBadge">Passo 1 de 3</span>
+              <h3 id="onboardingStepTitle">Crie sua casa</h3>
+              <p class="section-subtitle" id="onboardingStepDescription">Comece criando a casa onde as finanças vão morar.</p>
             </div>
             <button class="icon-btn" type="button" data-close-modal="onboardingModal">✕</button>
           </div>
 
-          <div class="onboarding-steps">
-            <article class="onboarding-step">
-              <span class="step-number">1</span>
-              <div>
-                <strong>Crie sua casa</strong>
-                <p>Use o campo “Criar nova casa”. Assim o SOMA gera um ID único para convidar a outra pessoa depois.</p>
-              </div>
-            </article>
-
-            <article class="onboarding-step">
-              <span class="step-number">2</span>
-              <div>
-                <strong>Cadastre categorias e limites</strong>
-                <p>Defina se cada categoria pertence a uma pessoa ou ao compartilhado, e já salve o limite do mês.</p>
-              </div>
-            </article>
-
-            <article class="onboarding-step">
-              <span class="step-number">3</span>
-              <div>
-                <strong>Lance os gastos</strong>
-                <p>Depois é só registrar os lançamentos do mês. O painel recalcula limite, gasto e saldo automaticamente.</p>
-              </div>
-            </article>
+          <div id="onboardingStep1" class="onboarding-step-pane">
+            <div class="field">
+              <label for="onboardingHouseholdName">Nome da casa</label>
+              <input id="onboardingHouseholdName" type="text" placeholder="Ex.: Casa Gabriel &amp; Maria" />
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-primary" type="button" id="btnOnboardingCreateHousehold">Criar casa e continuar</button>
+            </div>
           </div>
 
-          <div class="modal-actions">
-            <button class="btn btn-secondary" type="button" data-close-modal="onboardingModal">Fechar</button>
-            <button class="btn btn-primary" type="button" id="btnStartOnboarding">Começar</button>
+          <div id="onboardingStep2" class="onboarding-step-pane" hidden>
+            <div class="field">
+              <label for="onboardingCategoryName">Primeira categoria</label>
+              <input id="onboardingCategoryName" type="text" placeholder="Ex.: Mercado" />
+            </div>
+
+            <div class="grid grid-2">
+              <div class="field">
+                <label for="onboardingCategoryScope">Escopo financeiro</label>
+                <select id="onboardingCategoryScope">
+                  <option value="shared">Compartilhado</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="onboardingCategoryCurrency">Moeda</label>
+                <select id="onboardingCategoryCurrency">
+                  <option value="BRL">BRL</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="onboardingBudgetAmount">Limite mensal</label>
+              <input id="onboardingBudgetAmount" type="text" placeholder="Ex.: 350,00" />
+            </div>
+
+            <div class="modal-actions">
+              <button class="btn btn-primary" type="button" id="btnOnboardingCreateCategory">Salvar categoria e continuar</button>
+            </div>
+          </div>
+
+          <div id="onboardingStep3" class="onboarding-step-pane" hidden>
+            <div class="onboarding-finish-card inner-card">
+              <strong>Estrutura pronta.</strong>
+              <p>Agora é com você: pode começar a lançar os gastos do mês. O menu lateral já separa visão financeira, categorias, lançamentos, orçamento, histórico e configurações.</p>
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" type="button" data-close-modal="onboardingModal">Fechar</button>
+              <button class="btn btn-primary" type="button" id="btnOnboardingGoTransactions">Ir para lançamentos</button>
+            </div>
           </div>
         </div>
       </div>
