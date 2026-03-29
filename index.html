@@ -60,7 +60,7 @@
           </div>
 
           <div class="stack-actions">
-            <button class="btn btn-primary btn-block" id="btnLogin">Entrar</button>
+            <button class="btn btn-primary btn-block" id="btnLogin" data-default-label="Entrar">Entrar</button>
             <div id="authMessage"></div>
           </div>
 
@@ -94,6 +94,7 @@
               <label for="selectedMonth">Mês de referência</label>
               <input id="selectedMonth" type="month" />
             </div>
+            <button class="btn btn-secondary" id="btnOpenOnboarding">Primeiros passos</button>
             <button class="btn btn-secondary" id="btnLogout">Sair</button>
           </div>
         </header>
@@ -134,6 +135,18 @@
           <div class="household-toolbar">
             <div class="mini-label">Casas disponíveis</div>
             <div class="household-list" id="householdList"></div>
+          </div>
+
+          <div class="active-household-card inner-card" id="activeHouseholdCard" hidden>
+            <div class="active-household-copy">
+              <span class="mini-label">ID da casa ativa</span>
+              <strong id="activeHouseholdName">Casa ativa</strong>
+              <code id="activeHouseholdId">—</code>
+              <p class="section-subtitle">Guarde esse ID. É ele que a outra pessoa usa para entrar na mesma casa depois.</p>
+            </div>
+            <div class="active-household-actions">
+              <button class="btn btn-secondary" id="btnCopyHouseholdId" type="button">Copiar ID</button>
+            </div>
           </div>
         </section>
 
@@ -367,6 +380,48 @@
           <div class="modal-actions">
             <button class="btn btn-secondary" type="button" data-close-modal="transactionModal">Cancelar</button>
             <button class="btn btn-primary" type="button" id="btnSaveTransactionEdit">Salvar alterações</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-backdrop" id="onboardingModal" hidden>
+        <div class="modal-card onboarding-card">
+          <div class="modal-head">
+            <div>
+              <span class="eyebrow">Primeiros passos</span>
+              <h3>Comece pelo básico</h3>
+            </div>
+            <button class="icon-btn" type="button" data-close-modal="onboardingModal">✕</button>
+          </div>
+
+          <div class="onboarding-steps">
+            <article class="onboarding-step">
+              <span class="step-number">1</span>
+              <div>
+                <strong>Crie sua casa</strong>
+                <p>Use o campo “Criar nova casa”. Assim o SOMA gera um ID único para convidar a outra pessoa depois.</p>
+              </div>
+            </article>
+
+            <article class="onboarding-step">
+              <span class="step-number">2</span>
+              <div>
+                <strong>Cadastre categorias e limites</strong>
+                <p>Defina se cada categoria pertence a uma pessoa ou ao compartilhado, e já salve o limite do mês.</p>
+              </div>
+            </article>
+
+            <article class="onboarding-step">
+              <span class="step-number">3</span>
+              <div>
+                <strong>Lance os gastos</strong>
+                <p>Depois é só registrar os lançamentos do mês. O painel recalcula limite, gasto e saldo automaticamente.</p>
+              </div>
+            </article>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-secondary" type="button" data-close-modal="onboardingModal">Fechar</button>
+            <button class="btn btn-primary" type="button" id="btnStartOnboarding">Começar</button>
           </div>
         </div>
       </div>
