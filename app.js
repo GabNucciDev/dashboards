@@ -43,6 +43,17 @@ const el = {
   scopeFilters: byId('scopeFilters'),
   currentViewTitle: byId('currentViewTitle'),
   currentViewSubtitle: byId('currentViewSubtitle'),
+  viewTabCaption: byId('viewTabCaption'),
+
+  decisionStatusCard: byId('decisionStatusCard'),
+  decisionStatusPill: byId('decisionStatusPill'),
+  decisionStatusTitle: byId('decisionStatusTitle'),
+  decisionStatusSummary: byId('decisionStatusSummary'),
+  decisionMonthProgress: byId('decisionMonthProgress'),
+  decisionSpendProgress: byId('decisionSpendProgress'),
+  decisionAlerts: byId('decisionAlerts'),
+  decisionActionTitle: byId('decisionActionTitle'),
+  decisionActionBody: byId('decisionActionBody'),
 
   categoryName: byId('categoryName'),
   categoryOwnerScope: byId('categoryOwnerScope'),
@@ -724,7 +735,7 @@ function renderOnboardingStep() {
   const configs = {
     1: { badge: 'Passo 1 de 3', title: 'Crie sua casa', desc: 'Dê um nome para a casa. Depois o SOMA guarda o ID para você convidar a outra pessoa em Configurações.' },
     2: { badge: 'Passo 2 de 3', title: 'Cadastre sua primeira categoria', desc: 'Escolha onde essa categoria vive: em uma pessoa específica ou no compartilhado.' },
-    3: { badge: 'Passo 3 de 3', title: 'Agora é com você', desc: 'Com a estrutura pronta, o próximo passo é começar a lançar os gastos do mês.' },
+    3: { badge: 'Passo 3 de 3', title: 'Tudo pronto para começar', desc: 'Casa e primeira categoria configuradas. Falta só registrar o primeiro gasto do mês.' },
   };
 
   const meta = configs[step] || configs[1];
@@ -811,17 +822,17 @@ function renderScopeFilters() {
     {
       key: 'household',
       label: 'Casa',
-      description: 'Mistura tudo sem esconder a origem: individual de cada pessoa + compartilhado.',
+      description: 'Você está vendo a casa inteira: individual de cada pessoa + compartilhado.',
     },
     ...state.householdUsers.map((user) => ({
       key: `member:${user.user_id}`,
       label: user.full_name,
-      description: `Mostra só categorias e gastos que pertencem a ${user.full_name}.`,
+      description: `Você está vendo apenas categorias e gastos de ${user.full_name}.`,
     })),
     {
       key: 'shared',
       label: 'Compartilhado',
-      description: 'Mostra apenas o que é dos dois, como contas e despesas em comum.',
+      description: 'Você está vendo apenas o que pertence aos dois, como despesas em comum.',
     },
   ];
 
@@ -830,8 +841,8 @@ function renderScopeFilters() {
   items.forEach((item) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = `scope-card ${state.selectedView === item.key ? 'active' : ''}`;
-    button.innerHTML = `<strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.description)}</span>`;
+    button.className = `scope-tab ${state.selectedView === item.key ? 'active' : ''}`;
+    button.textContent = item.label;
     button.addEventListener('click', () => {
       state.selectedView = item.key;
       renderDashboard();
@@ -839,6 +850,9 @@ function renderScopeFilters() {
     });
     el.scopeFilters.appendChild(button);
   });
+
+  const active = items.find((item) => item.key === state.selectedView) || items[0];
+  if (el.viewTabCaption) el.viewTabCaption.textContent = active.description;
 }
 
 function renderOwnerScopeOptions() {
@@ -914,8 +928,141 @@ function renderDashboard() {
   if (el.currentViewTitle) el.currentViewTitle.textContent = meta.title;
   if (el.currentViewSubtitle) el.currentViewSubtitle.textContent = meta.subtitle;
 
+  renderDecisionLayer({ budgetRows, filteredTransactions, totalBudget, totalSpent, currentCurrency });
   renderBudgetsTable(budgetRows);
   renderTransactionsTable(filteredTransactions);
+}
+
+function renderDecisionLayer({ budgetRows, filteredTransactions, totalBudget, totalSpent, currentCurrency }) {
+  const analysis = analyzeCurrentView({ budgetRows, filteredTransactions, totalBudget, totalSpent, currentCurrency });
+
+  if (el.decisionStatusPill) {
+    el.decisionStatusPill.textContent = analysis.status.label;
+    el.decisionStatusPill.className = `status-pill ${analysis.status.tone}`;
+  }
+  if (el.decisionStatusTitle) el.decisionStatusTitle.textContent = analysis.status.title;
+  if (el.decisionStatusSummary) el.decisionStatusSummary.textContent = analysis.status.summary;
+  if (el.decisionMonthProgress) el.decisionMonthProgress.textContent = `Mês percorrido: ${analysis.monthProgress.toFixed(0)}%`;
+  if (el.decisionSpendProgress) el.decisionSpendProgress.textContent = `Orçamento usado: ${analysis.budgetUsage.toFixed(0)}%`;
+
+  if (el.decisionAlerts) {
+    if (analysis.alerts.length === 0) {
+      el.decisionAlerts.innerHTML = '<li class="decision-list-item muted">Nenhum alerta relevante neste recorte agora.</li>';
+    } else {
+      el.decisionAlerts.innerHTML = analysis.alerts.slice(0, 3).map((alert) => `<li class="decision-list-item">${escapeHtml(alert)}</li>`).join('');
+    }
+  }
+
+  if (el.decisionActionTitle) el.decisionActionTitle.textContent = analysis.action.title;
+  if (el.decisionActionBody) el.decisionActionBody.textContent = analysis.action.body;
+}
+
+function analyzeCurrentView({ budgetRows, filteredTransactions, totalBudget, totalSpent }) {
+  const monthProgress = getMonthProgressPercent(state.selectedMonth);
+  const budgetUsage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  const criticalRows = budgetRows.filter((row) => row.percent >= 100);
+  const attentionRows = budgetRows.filter((row) => row.percent >= 80 && row.percent < 100);
+  const overspendDelta = budgetUsage - monthProgress;
+  const missingBudgetCategories = filteredTransactions.filter((tx) => !budgetRows.some((row) => row.categoryId === tx.category_id));
+
+  let status = {
+    tone: 'healthy',
+    label: 'Saudável',
+    title: 'Orçamento sob controle',
+    summary: 'O ritmo de gasto está compatível com o ponto do mês e não há categoria em risco imediato.',
+  };
+
+  if (criticalRows.length > 0 || overspendDelta > 20) {
+    status = {
+      tone: 'critical',
+      label: 'Crítico',
+      title: 'O mês pede correção imediata',
+      summary: criticalRows.length > 0
+        ? 'Há categoria estourada neste recorte. O ideal é ajustar gasto ou rever limite agora.'
+        : 'O gasto acumulado está acima demais do ritmo esperado para este ponto do mês.',
+    };
+  } else if (attentionRows.length > 0 || overspendDelta > 10) {
+    status = {
+      tone: 'attention',
+      label: 'Em atenção',
+      title: 'Vale segurar o ritmo',
+      summary: attentionRows.length > 0
+        ? 'Existe categoria encostando no limite e isso já merece acompanhamento próximo.'
+        : 'O recorte atual está gastando acima do ritmo esperado para este ponto do mês.',
+    };
+  } else if (totalBudget === 0 && filteredTransactions.length === 0) {
+    status = {
+      tone: 'attention',
+      label: 'Começando',
+      title: 'Estrutura ainda vazia',
+      summary: 'Ainda não há orçamento e lançamentos suficientes para o SOMA gerar leitura útil do mês.',
+    };
+  }
+
+  const alerts = [];
+  criticalRows.slice(0, 2).forEach((row) => alerts.push(`${row.category} já passou do limite (${row.percent.toFixed(0)}% usado).`));
+  attentionRows.slice(0, 2).forEach((row) => alerts.push(`${row.category} já consumiu ${row.percent.toFixed(0)}% do limite.`));
+  if (overspendDelta > 10) alerts.push(`O gasto deste recorte está ${overspendDelta.toFixed(0)} pontos acima do ritmo esperado do mês.`);
+  if (missingBudgetCategories.length > 0) alerts.push('Há lançamentos em categoria sem limite mensal definido.');
+
+  const action = getPrimaryActionSuggestion({ budgetRows, filteredTransactions, criticalRows, attentionRows, overspendDelta });
+
+  return { status, alerts, action, monthProgress, budgetUsage };
+}
+
+function getPrimaryActionSuggestion({ budgetRows, filteredTransactions, criticalRows, attentionRows, overspendDelta }) {
+  if (!state.activeHouseholdId) {
+    return {
+      title: 'Crie a casa primeiro',
+      body: 'Sem casa ativa o SOMA não consegue separar o que é individual e o que é compartilhado. Vá em Configurações e crie a estrutura principal.',
+    };
+  }
+
+  if (budgetRows.length === 0) {
+    return {
+      title: 'Cadastre a primeira categoria',
+      body: 'Sem categoria e limite mensal o SOMA não consegue avaliar pressão de orçamento. Comece pela despesa mais recorrente do mês.',
+    };
+  }
+
+  if (filteredTransactions.length === 0) {
+    return {
+      title: 'Lance o primeiro gasto',
+      body: 'Com a estrutura pronta, o próximo passo é registrar ao menos um lançamento neste recorte para ativar a leitura do mês.',
+    };
+  }
+
+  if (criticalRows.length > 0) {
+    return {
+      title: 'Ataque a categoria estourada primeiro',
+      body: `Revise a categoria ${criticalRows[0].category} e decida se o problema é excesso de gasto ou limite mal calibrado.`,
+    };
+  }
+
+  if (attentionRows.length > 0 || overspendDelta > 10) {
+    return {
+      title: 'Segure o ritmo nas próximas compras',
+      body: 'Evite novos gastos discricionários neste recorte até o uso voltar a ficar compatível com o momento do mês.',
+    };
+  }
+
+  return {
+    title: 'Mantenha o mês atualizado',
+    body: 'Continue lançando os gastos em dia. A boa decisão vem mais da disciplina do registro do que de gráficos bonitos.',
+  };
+}
+
+function getMonthProgressPercent(yearMonth) {
+  const [year, month] = yearMonth.split('-').map(Number);
+  const now = new Date();
+  const selected = new Date(year, month - 1, 1);
+  const current = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  if (selected < current) return 100;
+  if (selected > current) return 0;
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  return Math.min(100, (now.getDate() / daysInMonth) * 100);
 }
 
 function buildBudgetRows() {
@@ -976,23 +1123,24 @@ function renderBudgetsTable(rows) {
     return;
   }
 
+  const showScope = state.selectedView === 'household';
   const html = [
-    '<div class="table-shell"><table><thead><tr><th>Categoria</th><th>Escopo</th><th>Limite</th><th>Gasto</th><th>Saldo</th><th>Uso</th><th>Ações</th></tr></thead><tbody>',
+    `<div class="table-shell"><table><thead><tr><th>Categoria</th>${showScope ? '<th>Escopo</th>' : ''}<th>Limite</th><th>Gasto</th><th>Saldo</th><th>Uso</th><th>Ações</th></tr></thead><tbody>`,
   ];
 
   rows.forEach((row) => {
     html.push(`
       <tr>
         <td>${escapeHtml(row.category)}</td>
-        <td><span class="badge">${escapeHtml(row.scopeLabel)}</span></td>
+        ${showScope ? `<td><span class="badge">${escapeHtml(row.scopeLabel)}</span></td>` : ''}
         <td>${formatMoney(row.budget, row.currency)}</td>
         <td>${formatMoney(row.spent, row.currency)}</td>
         <td class="${getMoneyClass(row.remaining, row.budget)}">${formatMoney(row.remaining, row.currency)}</td>
-        <td>${row.percent.toFixed(1)}%</td>
+        <td>${buildUsageCell(row.percent)}</td>
         <td>
           <div class="row-actions">
-            <button class="action-btn" type="button" onclick="window.SOMA.editCategory('${row.categoryId}')">Editar</button>
-            <button class="action-btn danger" type="button" onclick="window.SOMA.deleteCategory('${row.categoryId}')">Excluir</button>
+            <button class="icon-action-btn" type="button" aria-label="Editar categoria" title="Editar categoria" onclick="window.SOMA.editCategory('${row.categoryId}')">${getEditIcon()}</button>
+            <button class="icon-action-btn danger" type="button" aria-label="Excluir categoria" title="Excluir categoria" onclick="window.SOMA.deleteCategory('${row.categoryId}')">${getTrashIcon()}</button>
           </div>
         </td>
       </tr>
@@ -1011,8 +1159,9 @@ function renderTransactionsTable(rows) {
     return;
   }
 
+  const showScope = state.selectedView === 'household';
   const html = [
-    '<div class="table-shell"><table><thead><tr><th>Data</th><th>Categoria</th><th>Escopo</th><th>Descrição</th><th>Valor</th><th>Ações</th></tr></thead><tbody>',
+    `<div class="table-shell"><table><thead><tr><th>Data</th><th>Categoria</th>${showScope ? '<th>Escopo</th>' : ''}<th>Descrição</th><th>Valor</th><th>Ações</th></tr></thead><tbody>`,
   ];
 
   rows.forEach((tx) => {
@@ -1020,13 +1169,13 @@ function renderTransactionsTable(rows) {
       <tr>
         <td>${formatDate(tx.occurred_on)}</td>
         <td>${escapeHtml(tx.categories?.name || 'Sem categoria')}</td>
-        <td><span class="badge">${escapeHtml(tx.scopeLabel)}</span></td>
+        ${showScope ? `<td><span class="badge">${escapeHtml(tx.scopeLabel)}</span></td>` : ''}
         <td>${escapeHtml(tx.description || '-')}</td>
         <td>${formatMoney(Number(tx.amount), tx.currency)}</td>
         <td>
           <div class="row-actions">
-            <button class="action-btn" type="button" onclick="window.SOMA.editTransaction('${tx.id}')">Editar</button>
-            <button class="action-btn danger" type="button" onclick="window.SOMA.deleteTransaction('${tx.id}')">Excluir</button>
+            <button class="icon-action-btn" type="button" aria-label="Editar lançamento" title="Editar lançamento" onclick="window.SOMA.editTransaction('${tx.id}')">${getEditIcon()}</button>
+            <button class="icon-action-btn danger" type="button" aria-label="Excluir lançamento" title="Excluir lançamento" onclick="window.SOMA.deleteTransaction('${tx.id}')">${getTrashIcon()}</button>
           </div>
         </td>
       </tr>
@@ -1035,6 +1184,26 @@ function renderTransactionsTable(rows) {
 
   html.push('</tbody></table></div>');
   el.transactionsTable.innerHTML = html.join('');
+}
+
+function buildUsageCell(percent) {
+  const safePercent = Math.max(0, percent || 0);
+  const tone = safePercent >= 100 ? 'critical' : safePercent >= 80 ? 'attention' : 'healthy';
+  const width = Math.min(safePercent, 100);
+  return `
+    <div class="usage-cell">
+      <span class="usage-text">${safePercent.toFixed(1)}%</span>
+      <div class="usage-bar"><span class="usage-fill ${tone === 'healthy' ? '' : tone}" style="width:${width}%"></span></div>
+    </div>
+  `;
+}
+
+function getEditIcon() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></svg>`;
+}
+
+function getTrashIcon() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`;
 }
 
 function openEditCategory(categoryId) {
@@ -1342,7 +1511,7 @@ function getCurrentViewMeta() {
   if (state.selectedView === 'shared') {
     return {
       title: 'Visão do compartilhado',
-      subtitle: 'Aqui entram apenas categorias e gastos que pertencem aos dois.',
+      subtitle: 'Só despesas e orçamento que pertencem aos dois.',
     };
   }
 
@@ -1351,13 +1520,13 @@ function getCurrentViewMeta() {
     const member = state.householdUsers.find((item) => item.user_id === userId);
     return {
       title: member ? `Visão de ${member.full_name}` : 'Visão individual',
-      subtitle: 'Aqui entram apenas categorias e gastos vinculados a uma pessoa específica.',
+      subtitle: 'Só categorias e gastos dessa pessoa neste mês.',
     };
   }
 
   return {
     title: 'Visão da casa',
-    subtitle: 'A casa organiza tudo em três caixas: individual, da outra pessoa e compartilhado.',
+    subtitle: 'Panorama geral da casa neste mês, sem perder a origem dos gastos.',
   };
 }
 
