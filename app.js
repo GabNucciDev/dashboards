@@ -5,11 +5,13 @@ const state = {
   user: null,
   profile: null,
   households: [],
+  householdUsers: [],
   activeHouseholdId: null,
   categories: [],
   budgets: [],
   transactions: [],
   selectedMonth: getCurrentMonth(),
+  selectedView: 'household',
   editingCategoryId: null,
   editingBudgetId: null,
   editingTransactionId: null,
@@ -35,9 +37,12 @@ const el = {
   householdName: byId('householdName'),
   joinHouseholdId: byId('joinHouseholdId'),
   householdList: byId('householdList'),
+  scopeFilters: byId('scopeFilters'),
+  currentViewTitle: byId('currentViewTitle'),
+  currentViewSubtitle: byId('currentViewSubtitle'),
 
   categoryName: byId('categoryName'),
-  categoryScope: byId('categoryScope'),
+  categoryOwnerScope: byId('categoryOwnerScope'),
   categoryCurrency: byId('categoryCurrency'),
   budgetAmount: byId('budgetAmount'),
 
@@ -57,7 +62,7 @@ const el = {
   categoryModal: byId('categoryModal'),
   categoryModalTitle: byId('categoryModalTitle'),
   editCategoryName: byId('editCategoryName'),
-  editCategoryScope: byId('editCategoryScope'),
+  editCategoryOwnerScope: byId('editCategoryOwnerScope'),
   editCategoryCurrency: byId('editCategoryCurrency'),
   editBudgetAmount: byId('editBudgetAmount'),
   btnSaveCategoryEdit: byId('btnSaveCategoryEdit'),
@@ -84,7 +89,7 @@ async function boot() {
 
   if (state.session?.user) {
     if (el.signupView && !el.appView) {
-      window.location.href = './index.html';
+      window.location.replace('./index.html');
       return;
     }
     await hydrateUser(state.session.user);
@@ -101,7 +106,7 @@ async function boot() {
 
     if (session?.user) {
       if (el.signupView && !el.appView) {
-        window.location.href = './index.html';
+        window.location.replace('./index.html');
         return;
       }
       await hydrateUser(session.user);
@@ -198,8 +203,17 @@ async function login() {
 }
 
 async function logout() {
-  await supabase.auth.signOut();
-  window.location.href = './index.html';
+  clearMessages();
+  resetStateAfterLogout();
+  renderAuthState();
+
+  try {
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.error(error);
+  } finally {
+    window.location.replace('./index.html');
+  }
 }
 
 async function hydrateUser(user) {
@@ -226,6 +240,7 @@ function syncPreferredCurrency() {
 
 async function loadAll() {
   await loadHouseholds();
+  await loadHouseholdUsers();
   await loadBudgetsAndTransactions();
 }
 
@@ -256,6 +271,54 @@ async function loadHouseholds() {
   if (!state.activeHouseholdId && state.households.length > 0) {
     state.activeHouseholdId = state.households[0].household_id;
   }
+}
+
+async function loadHouseholdUsers() {
+  if (!state.activeHouseholdId) {
+    state.householdUsers = [];
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('household_members')
+    .select(`
+      user_id,
+      role,
+      profiles:user_id (
+        id,
+        full_name,
+        default_currency
+      )
+    `)
+    .eq('household_id', state.activeHouseholdId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    showAppMessage('Não foi possível carregar as pessoas desta casa.', 'error');
+    state.householdUsers = [];
+    return;
+  }
+
+  state.householdUsers = (data || []).map((item) => ({
+    user_id: item.user_id,
+    role: item.role,
+    full_name: item.profiles?.full_name || 'Pessoa',
+    default_currency: item.profiles?.default_currency || 'BRL',
+  }));
+
+  ensureValidSelectedView();
+}
+
+function ensureValidSelectedView() {
+  if (state.selectedView === 'household' || state.selectedView === 'shared') return;
+  if (!state.selectedView.startsWith('member:')) {
+    state.selectedView = 'household';
+    return;
+  }
+
+  const userId = state.selectedView.replace('member:', '');
+  const exists = state.householdUsers.some((item) => item.user_id === userId);
+  if (!exists) state.selectedView = 'household';
 }
 
 async function loadBudgetsAndTransactions() {
@@ -353,6 +416,7 @@ async function createHousehold() {
   }
 
   state.activeHouseholdId = houseData.id;
+  state.selectedView = 'household';
   if (el.householdName) el.householdName.value = '';
 
   await loadAll();
@@ -383,6 +447,7 @@ async function joinHousehold() {
   }
 
   state.activeHouseholdId = householdId;
+  state.selectedView = 'household';
   if (el.joinHouseholdId) el.joinHouseholdId.value = '';
 
   await loadAll();
@@ -399,7 +464,7 @@ async function createCategoryAndBudget() {
   }
 
   const name = valueOf(el.categoryName);
-  const scope = el.categoryScope?.value;
+  const ownerScope = el.categoryOwnerScope?.value;
   const currency = el.categoryCurrency?.value;
   const budgetAmount = parseCurrencyInput(valueOf(el.budgetAmount));
 
@@ -413,7 +478,7 @@ async function createCategoryAndBudget() {
     return;
   }
 
-  const owner_user_id = scope === 'personal' ? state.user.id : null;
+  const { scope, owner_user_id } = resolveScopeSelection(ownerScope);
   const year_month = `${state.selectedMonth}-01`;
 
   const { data: categoryData, error: categoryError } = await supabase
@@ -455,6 +520,7 @@ async function createCategoryAndBudget() {
 
   await loadBudgetsAndTransactions();
   renderDashboard();
+  renderCategoryOptions();
   showAppMessage('Categoria e limite mensal criados com sucesso.', 'success');
 }
 
@@ -518,6 +584,8 @@ function renderApp() {
   if (el.currentUserEmail) el.currentUserEmail.textContent = state.user?.email || '';
 
   renderHouseholds();
+  renderScopeFilters();
+  renderOwnerScopeOptions();
   renderCategoryOptions();
   renderDashboard();
 }
@@ -538,6 +606,8 @@ function renderHouseholds() {
     button.textContent = `${item.name} (${item.role})`;
     button.addEventListener('click', async () => {
       state.activeHouseholdId = item.household_id;
+      state.selectedView = 'household';
+      await loadHouseholdUsers();
       await loadBudgetsAndTransactions();
       renderApp();
     });
@@ -545,28 +615,87 @@ function renderHouseholds() {
   });
 }
 
+function renderScopeFilters() {
+  if (!el.scopeFilters) return;
+
+  el.scopeFilters.innerHTML = '';
+  const items = [
+    { key: 'household', label: 'Casa' },
+    ...state.householdUsers.map((user) => ({ key: `member:${user.user_id}`, label: user.full_name })),
+    { key: 'shared', label: 'Compartilhado' },
+  ];
+
+  items.forEach((item) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `scope-chip ${state.selectedView === item.key ? 'active' : ''}`;
+    button.textContent = item.label;
+    button.addEventListener('click', () => {
+      state.selectedView = item.key;
+      renderDashboard();
+      renderScopeFilters();
+    });
+    el.scopeFilters.appendChild(button);
+  });
+}
+
+function renderOwnerScopeOptions() {
+  const options = buildOwnerScopeOptions();
+  if (el.categoryOwnerScope) el.categoryOwnerScope.innerHTML = options;
+  if (el.editCategoryOwnerScope) el.editCategoryOwnerScope.innerHTML = options;
+
+  if (el.categoryOwnerScope && state.selectedView.startsWith('member:')) {
+    el.categoryOwnerScope.value = state.selectedView.replace('member:', '');
+  } else if (el.categoryOwnerScope && state.selectedView === 'shared') {
+    el.categoryOwnerScope.value = 'shared';
+  }
+}
+
+function buildOwnerScopeOptions() {
+  const options = ['<option value="shared">Compartilhado</option>'];
+  state.householdUsers.forEach((user) => {
+    options.push(`<option value="${user.user_id}">${escapeHtml(user.full_name)}</option>`);
+  });
+  return options.join('');
+}
+
 function renderCategoryOptions() {
   const options = ['<option value="">Selecione</option>'];
 
-  state.categories.forEach((category) => {
-    options.push(`<option value="${category.id}">${escapeHtml(category.name)}</option>`);
+  getVisibleCategoriesForSelection().forEach((category) => {
+    const scopeLabel = getScopeLabelFromCategory(category);
+    options.push(`<option value="${category.id}">${escapeHtml(scopeLabel)} — ${escapeHtml(category.name)}</option>`);
   });
 
   if (el.txCategory) el.txCategory.innerHTML = options.join('');
   if (el.editTxCategory) el.editTxCategory.innerHTML = options.join('');
 }
 
+function getVisibleCategoriesForSelection() {
+  if (state.selectedView === 'household') return state.categories;
+  if (state.selectedView === 'shared') return state.categories.filter((item) => item.scope === 'shared');
+  if (state.selectedView.startsWith('member:')) {
+    const userId = state.selectedView.replace('member:', '');
+    return state.categories.filter((item) => item.scope === 'personal' && item.owner_user_id === userId);
+  }
+  return state.categories;
+}
+
 function renderDashboard() {
   if (!el.totalBudget) return;
 
-  const currentCurrency = state.profile?.default_currency || 'BRL';
-  const budgetRows = buildBudgetRows();
+  const currentCurrency = getViewCurrency();
+  const budgetRows = filterBudgetRowsByView(buildBudgetRows());
+  const filteredTransactions = filterTransactionsByView(buildTransactionRows());
 
-  const sameCurrencyRows = budgetRows.filter((row) => row.currency === currentCurrency);
-  const totalBudget = sameCurrencyRows.reduce((sum, row) => sum + row.budget, 0);
-  const totalSpent = state.transactions
+  const totalBudget = budgetRows
+    .filter((row) => row.currency === currentCurrency)
+    .reduce((sum, row) => sum + row.budget, 0);
+
+  const totalSpent = filteredTransactions
     .filter((tx) => tx.currency === currentCurrency)
     .reduce((sum, tx) => sum + Number(tx.amount), 0);
+
   const totalRemaining = Math.max(totalBudget - totalSpent, 0);
 
   el.totalBudget.textContent = formatMoney(totalBudget, currentCurrency);
@@ -574,12 +703,17 @@ function renderDashboard() {
   el.totalRemaining.textContent = formatMoney(totalRemaining, currentCurrency);
   el.totalCategories.textContent = String(budgetRows.length);
 
+  const meta = getCurrentViewMeta();
+  if (el.currentViewTitle) el.currentViewTitle.textContent = meta.title;
+  if (el.currentViewSubtitle) el.currentViewSubtitle.textContent = meta.subtitle;
+
   renderBudgetsTable(budgetRows);
-  renderTransactionsTable();
+  renderTransactionsTable(filteredTransactions);
 }
 
 function buildBudgetRows() {
   return state.budgets.map((budget) => {
+    const scopeKey = getScopeKey(budget.categories);
     const spent = state.transactions
       .filter((tx) => tx.category_id === budget.category_id)
       .reduce((sum, tx) => sum + Number(tx.amount), 0);
@@ -593,6 +727,8 @@ function buildBudgetRows() {
       categoryId: budget.category_id,
       category: budget.categories?.name || 'Sem categoria',
       scope: budget.categories?.scope || 'personal',
+      scopeKey,
+      scopeLabel: getScopeLabelFromCategory(budget.categories),
       currency: budget.currency,
       budget: budgetAmount,
       spent,
@@ -603,23 +739,45 @@ function buildBudgetRows() {
   });
 }
 
+function buildTransactionRows() {
+  return state.transactions.map((tx) => ({
+    ...tx,
+    scopeKey: getScopeKey(tx.categories),
+    scopeLabel: getScopeLabelFromCategory(tx.categories),
+  }));
+}
+
+function filterBudgetRowsByView(rows) {
+  if (state.selectedView === 'household') return rows;
+  if (state.selectedView === 'shared') return rows.filter((row) => row.scopeKey === 'shared');
+  if (state.selectedView.startsWith('member:')) return rows.filter((row) => row.scopeKey === state.selectedView);
+  return rows;
+}
+
+function filterTransactionsByView(rows) {
+  if (state.selectedView === 'household') return rows;
+  if (state.selectedView === 'shared') return rows.filter((row) => row.scopeKey === 'shared');
+  if (state.selectedView.startsWith('member:')) return rows.filter((row) => row.scopeKey === state.selectedView);
+  return rows;
+}
+
 function renderBudgetsTable(rows) {
   if (!el.budgetsTable) return;
 
   if (rows.length === 0) {
-    el.budgetsTable.innerHTML = '<div class="empty-state">Nenhum limite mensal cadastrado para este mês.</div>';
+    el.budgetsTable.innerHTML = '<div class="empty-state">Nenhum limite mensal cadastrado para esta visão.</div>';
     return;
   }
 
   const html = [
-    '<div class="table-shell"><table><thead><tr><th>Categoria</th><th>Tipo</th><th>Limite</th><th>Gasto</th><th>Saldo</th><th>Uso</th><th>Ações</th></tr></thead><tbody>',
+    '<div class="table-shell"><table><thead><tr><th>Categoria</th><th>Escopo</th><th>Limite</th><th>Gasto</th><th>Saldo</th><th>Uso</th><th>Ações</th></tr></thead><tbody>',
   ];
 
   rows.forEach((row) => {
     html.push(`
       <tr>
         <td>${escapeHtml(row.category)}</td>
-        <td><span class="badge">${row.scope === 'shared' ? 'Compartilhada' : 'Pessoal'}</span></td>
+        <td><span class="badge">${escapeHtml(row.scopeLabel)}</span></td>
         <td>${formatMoney(row.budget, row.currency)}</td>
         <td>${formatMoney(row.spent, row.currency)}</td>
         <td class="${getMoneyClass(row.remaining, row.budget)}">${formatMoney(row.remaining, row.currency)}</td>
@@ -638,23 +796,24 @@ function renderBudgetsTable(rows) {
   el.budgetsTable.innerHTML = html.join('');
 }
 
-function renderTransactionsTable() {
+function renderTransactionsTable(rows) {
   if (!el.transactionsTable) return;
 
-  if (state.transactions.length === 0) {
-    el.transactionsTable.innerHTML = '<div class="empty-state">Nenhum gasto lançado neste mês.</div>';
+  if (rows.length === 0) {
+    el.transactionsTable.innerHTML = '<div class="empty-state">Nenhum gasto lançado nesta visão do mês.</div>';
     return;
   }
 
   const html = [
-    '<div class="table-shell"><table><thead><tr><th>Data</th><th>Categoria</th><th>Descrição</th><th>Valor</th><th>Ações</th></tr></thead><tbody>',
+    '<div class="table-shell"><table><thead><tr><th>Data</th><th>Categoria</th><th>Escopo</th><th>Descrição</th><th>Valor</th><th>Ações</th></tr></thead><tbody>',
   ];
 
-  state.transactions.forEach((tx) => {
+  rows.forEach((tx) => {
     html.push(`
       <tr>
         <td>${formatDate(tx.occurred_on)}</td>
         <td>${escapeHtml(tx.categories?.name || 'Sem categoria')}</td>
+        <td><span class="badge">${escapeHtml(tx.scopeLabel)}</span></td>
         <td>${escapeHtml(tx.description || '-')}</td>
         <td>${formatMoney(Number(tx.amount), tx.currency)}</td>
         <td>
@@ -686,7 +845,9 @@ function openEditCategory(categoryId) {
 
   if (el.categoryModalTitle) el.categoryModalTitle.textContent = `Editar categoria: ${category.name}`;
   if (el.editCategoryName) el.editCategoryName.value = category.name;
-  if (el.editCategoryScope) el.editCategoryScope.value = category.scope;
+  if (el.editCategoryOwnerScope) {
+    el.editCategoryOwnerScope.value = category.scope === 'shared' ? 'shared' : category.owner_user_id;
+  }
   if (el.editCategoryCurrency) el.editCategoryCurrency.value = budget.currency;
   if (el.editBudgetAmount) el.editBudgetAmount.value = formatNumberForInput(budget.amount);
 
@@ -699,7 +860,7 @@ async function saveCategoryEdit() {
   const categoryId = state.editingCategoryId;
   const budgetId = state.editingBudgetId;
   const name = valueOf(el.editCategoryName);
-  const scope = el.editCategoryScope?.value;
+  const ownerScope = el.editCategoryOwnerScope?.value;
   const currency = el.editCategoryCurrency?.value;
   const amount = parseCurrencyInput(valueOf(el.editBudgetAmount));
 
@@ -718,7 +879,7 @@ async function saveCategoryEdit() {
     return;
   }
 
-  const owner_user_id = scope === 'personal' ? state.user.id : null;
+  const { scope, owner_user_id } = resolveScopeSelection(ownerScope);
 
   const { error: categoryError } = await supabase
     .from('categories')
@@ -899,13 +1060,65 @@ function resetStateAfterLogout() {
   state.user = null;
   state.profile = null;
   state.households = [];
+  state.householdUsers = [];
   state.activeHouseholdId = null;
   state.categories = [];
   state.budgets = [];
   state.transactions = [];
+  state.selectedView = 'household';
   state.editingCategoryId = null;
   state.editingBudgetId = null;
   state.editingTransactionId = null;
+}
+
+function resolveScopeSelection(value) {
+  if (!value || value === 'shared') {
+    return { scope: 'shared', owner_user_id: null };
+  }
+  return { scope: 'personal', owner_user_id: value };
+}
+
+function getCurrentViewMeta() {
+  if (state.selectedView === 'shared') {
+    return {
+      title: 'Visão do compartilhado',
+      subtitle: 'Aqui entram apenas categorias e gastos que pertencem aos dois.',
+    };
+  }
+
+  if (state.selectedView.startsWith('member:')) {
+    const userId = state.selectedView.replace('member:', '');
+    const member = state.householdUsers.find((item) => item.user_id === userId);
+    return {
+      title: member ? `Visão de ${member.full_name}` : 'Visão individual',
+      subtitle: 'Aqui entram apenas categorias e gastos vinculados a uma pessoa específica.',
+    };
+  }
+
+  return {
+    title: 'Visão da casa',
+    subtitle: 'A casa organiza tudo em três caixas: individual, da outra pessoa e compartilhado.',
+  };
+}
+
+function getViewCurrency() {
+  if (state.selectedView.startsWith('member:')) {
+    const userId = state.selectedView.replace('member:', '');
+    const member = state.householdUsers.find((item) => item.user_id === userId);
+    return member?.default_currency || state.profile?.default_currency || 'BRL';
+  }
+  return state.profile?.default_currency || 'BRL';
+}
+
+function getScopeKey(category) {
+  if (!category || category.scope === 'shared' || !category.owner_user_id) return 'shared';
+  return `member:${category.owner_user_id}`;
+}
+
+function getScopeLabelFromCategory(category) {
+  if (!category || category.scope === 'shared' || !category.owner_user_id) return 'Compartilhado';
+  const member = state.householdUsers.find((item) => item.user_id === category.owner_user_id);
+  return member?.full_name || 'Pessoal';
 }
 
 function mapSupabaseError(error) {
@@ -920,7 +1133,7 @@ function mapSupabaseError(error) {
   }
 
   if (message.includes('duplicate key value violates unique constraint "idx_categories_unique_name"')) {
-    return 'Já existe uma categoria com esse nome nessa casa.';
+    return 'Já existe uma categoria com esse nome nessa mesma caixa financeira.';
   }
 
   if (message.includes('duplicate key value violates unique constraint "idx_monthly_budgets_unique"')) {
@@ -937,6 +1150,10 @@ function mapSupabaseError(error) {
 
   if (message.includes('User already registered')) {
     return 'Esse email já está cadastrado.';
+  }
+
+  if (message.includes('new row violates row-level security policy')) {
+    return 'Você não tem permissão para concluir essa ação nesta casa.';
   }
 
   return message || 'Ocorreu um erro inesperado.';
