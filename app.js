@@ -17,7 +17,7 @@ const state = {
   editingTransactionId: null,
   onboardingAutoShown: false,
   onboardingStep: 1,
-  activeScreen: 'overview',
+  activeScreen: 'management',
 };
 
 const el = {
@@ -740,7 +740,9 @@ function renderOnboardingStep() {
 function finishOnboarding() {
   window.localStorage.setItem(getOnboardingStorageKey(), 'seen');
   closeModal('onboardingModal');
-  setActiveScreen('transactions');
+  setActiveScreen('management');
+  const txPanel = byId('transactionsPanel');
+  if (txPanel) txPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   if (el.txAmount) el.txAmount.focus();
 }
 
@@ -1326,7 +1328,7 @@ function resetStateAfterLogout() {
   state.editingTransactionId = null;
   state.onboardingAutoShown = false;
   state.onboardingStep = 1;
-  state.activeScreen = 'overview';
+  state.activeScreen = 'management';
 }
 
 function resolveScopeSelection(value) {
