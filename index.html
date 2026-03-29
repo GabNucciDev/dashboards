@@ -1,350 +1,806 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Financeiro do Casal</title>
+  <title>Painel Financeiro do Casal</title>
   <style>
-    :root {
-      --bg: #0f172a;
-      --panel: #111827;
-      --panel-2: #1f2937;
-      --card: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.12);
-      --text: #e5e7eb;
-      --muted: #94a3b8;
-      --good: #22c55e;
-      --warn: #f59e0b;
-      --bad: #ef4444;
-      --accent: #60a5fa;
-      --shadow: 0 20px 40px rgba(0,0,0,0.25);
-      --radius: 20px;
+    :root{
+      --bg:#07111f;
+      --bg-2:#0b1730;
+      --panel:rgba(10,20,39,.72);
+      --panel-solid:#0d1930;
+      --card:rgba(255,255,255,.055);
+      --card-2:rgba(255,255,255,.075);
+      --border:rgba(255,255,255,.10);
+      --border-strong:rgba(255,255,255,.16);
+      --text:#ecf3ff;
+      --muted:#9bb0cb;
+      --muted-2:#7b8aa5;
+      --accent:#7cb6ff;
+      --accent-2:#4de2c5;
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --radius-xl:28px;
+      --radius-lg:22px;
+      --radius-md:16px;
+      --shadow:0 24px 60px rgba(0,0,0,.28);
+      --shadow-soft:0 18px 40px rgba(3,9,20,.24);
+      --content-max:1440px;
     }
 
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    *{box-sizing:border-box}
+    html,body{margin:0}
+    body{
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--text);
+      min-height:100vh;
       background:
-        radial-gradient(circle at top left, rgba(96,165,250,0.18), transparent 28%),
-        radial-gradient(circle at top right, rgba(34,197,94,0.12), transparent 22%),
-        linear-gradient(180deg, #0b1220 0%, #111827 100%);
-      color: var(--text);
-      min-height: 100vh;
+        radial-gradient(circle at 0% 0%, rgba(124,182,255,.16), transparent 28%),
+        radial-gradient(circle at 100% 0%, rgba(77,226,197,.10), transparent 22%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
     }
 
-    .container {
-      max-width: 1320px;
-      margin: 0 auto;
-      padding: 24px;
+    .shell{
+      max-width:var(--content-max);
+      margin:0 auto;
+      padding:28px;
     }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-start;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
+    .hero{
+      display:grid;
+      grid-template-columns:minmax(0,1.4fr) minmax(320px,.8fr);
+      gap:18px;
+      align-items:stretch;
+      margin-bottom:20px;
     }
 
-    .title-wrap h1 {
-      margin: 0 0 8px;
-      font-size: clamp(1.7rem, 3vw, 2.6rem);
-      line-height: 1.1;
+    .hero-main,
+    .hero-side,
+    .panel{
+      background:linear-gradient(180deg, rgba(13,25,48,.88), rgba(8,17,32,.78));
+      border:1px solid var(--border);
+      box-shadow:var(--shadow-soft);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
 
-    .title-wrap p {
-      margin: 0;
-      color: var(--muted);
-      max-width: 760px;
-      line-height: 1.5;
+    .hero-main{
+      border-radius:calc(var(--radius-xl) + 6px);
+      padding:28px;
+      position:relative;
+      overflow:hidden;
     }
 
-    .toolbar {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+    .hero-main:before{
+      content:"";
+      position:absolute;
+      inset:auto -80px -120px auto;
+      width:280px;
+      height:280px;
+      background:radial-gradient(circle, rgba(124,182,255,.18), transparent 70%);
+      pointer-events:none;
     }
 
-    button, .chip {
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.06);
-      color: var(--text);
-      border-radius: 999px;
-      padding: 12px 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: .2s ease;
-      backdrop-filter: blur(8px);
+    .hero-side{
+      border-radius:calc(var(--radius-xl) + 6px);
+      padding:22px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:18px;
     }
 
-    button:hover {
-      transform: translateY(-1px);
-      background: rgba(255,255,255,0.1);
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(124,182,255,.10);
+      border:1px solid rgba(124,182,255,.18);
+      color:#d7e8ff;
+      font-size:.88rem;
+      font-weight:700;
+      letter-spacing:.02em;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 18px;
+    .eyebrow-dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:var(--accent-2);
+      box-shadow:0 0 0 8px rgba(77,226,197,.12);
     }
 
-    .panel {
-      grid-column: span 12;
-      background: rgba(17,24,39,0.72);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
+    h1{
+      margin:18px 0 14px;
+      font-size:clamp(2rem, 5vw, 3.5rem);
+      line-height:.98;
+      letter-spacing:-.04em;
+      max-width:760px;
     }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 18px;
-      margin-bottom: 18px;
+    .hero-text{
+      margin:0;
+      color:var(--muted);
+      max-width:760px;
+      font-size:1.02rem;
+      line-height:1.65;
     }
 
-    .stat-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 18px;
+    .hero-meta{
+      margin-top:22px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
     }
 
-    .stat-label {
-      color: var(--muted);
-      font-size: 0.92rem;
-      margin-bottom: 10px;
+    .meta-pill{
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--border);
+      color:var(--muted);
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:600;
+      font-size:.92rem;
     }
 
-    .stat-value {
-      font-size: clamp(1.4rem, 2vw, 2rem);
-      font-weight: 800;
-      line-height: 1;
-      margin-bottom: 8px;
+    .hero-side-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
     }
 
-    .stat-sub {
-      color: var(--muted);
-      font-size: 0.9rem;
+    .hero-side-title{
+      margin:0;
+      font-size:1rem;
+      color:var(--muted);
+      font-weight:700;
     }
 
-    .split {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 18px;
+    .hero-side-value{
+      margin:8px 0 6px;
+      font-size:clamp(1.8rem, 4vw, 2.8rem);
+      line-height:1;
+      letter-spacing:-.04em;
     }
 
-    .panel h2 {
-      margin: 0 0 14px;
-      font-size: 1.1rem;
+    .hero-side-sub{
+      margin:0;
+      color:var(--muted);
+      line-height:1.55;
+      font-size:.96rem;
     }
 
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      justify-content:flex-end;
+      align-items:center;
     }
 
-    .panel-header p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.95rem;
+    button{
+      appearance:none;
+      border:none;
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
+      color:var(--text);
+      padding:13px 18px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:.96rem;
+      border:1px solid var(--border-strong);
+      cursor:pointer;
+      transition:transform .18s ease, background .18s ease, border-color .18s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      overflow: hidden;
+    button:hover{
+      transform:translateY(-1px);
+      background:linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.07));
+      border-color:rgba(255,255,255,.22);
     }
 
-    th, td {
-      text-align: left;
-      padding: 14px 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      font-size: 0.96rem;
+    .button-ghost{
+      background:rgba(255,255,255,.04);
     }
 
-    th {
-      color: var(--muted);
-      font-weight: 700;
+    .status-line{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:var(--muted);
+      font-size:.92rem;
+      font-weight:600;
+      flex-wrap:wrap;
     }
 
-    tbody tr:hover {
-      background: rgba(255,255,255,0.03);
+    .status-dot{
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      background:var(--accent-2);
+      box-shadow:0 0 0 8px rgba(77,226,197,.10);
+      flex:0 0 auto;
     }
 
-    .money.good { color: var(--good); font-weight: 700; }
-    .money.bad { color: var(--bad); font-weight: 700; }
-    .money.warn { color: var(--warn); font-weight: 700; }
-
-    .bar-list {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+    .layout{
+      display:grid;
+      grid-template-columns: repeat(12, minmax(0,1fr));
+      gap:18px;
     }
 
-    .bar-item {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
+    .panel{
+      border-radius:var(--radius-xl);
+      padding:22px;
+      box-shadow:var(--shadow);
     }
 
-    .bar-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 10px;
-      align-items: center;
+    .panel-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
     }
 
-    .bar-name {
-      font-weight: 700;
+    .panel-header h2{
+      margin:0 0 6px;
+      font-size:1.18rem;
+      letter-spacing:-.02em;
     }
 
-    .bar-meta {
-      color: var(--muted);
-      font-size: 0.9rem;
+    .panel-header p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.55;
     }
 
-    .bar-track {
-      height: 12px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 999px;
-      overflow: hidden;
-      position: relative;
+    .panel-full{grid-column: span 12}
+    .panel-8{grid-column: span 8}
+    .panel-7{grid-column: span 7}
+    .panel-5{grid-column: span 5}
+    .panel-4{grid-column: span 4}
+    .panel-6{grid-column: span 6}
+
+    .segment{
+      display:inline-flex;
+      gap:8px;
+      padding:6px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      flex-wrap:wrap;
     }
 
-    .bar-fill {
-      height: 100%;
-      border-radius: 999px;
-      width: 0;
-      transition: width .5s ease;
-      background: linear-gradient(90deg, var(--accent), #93c5fd);
+    .segment button{
+      padding:10px 14px;
+      background:transparent;
+      border:1px solid transparent;
+      color:var(--muted);
+      box-shadow:none;
     }
 
-    .bar-fill.warning {
-      background: linear-gradient(90deg, var(--warn), #fcd34d);
+    .segment button.active{
+      background:linear-gradient(180deg, rgba(124,182,255,.18), rgba(124,182,255,.08));
+      color:var(--text);
+      border-color:rgba(124,182,255,.28);
     }
 
-    .bar-fill.danger {
-      background: linear-gradient(90deg, var(--bad), #fca5a5);
+    .metrics{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:16px;
     }
 
-    .insights {
-      display: grid;
-      gap: 12px;
+    .metric{
+      background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.035));
+      border:1px solid var(--border);
+      border-radius:22px;
+      padding:18px;
+      min-height:142px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
     }
 
-    .insight {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px 16px;
-      line-height: 1.5;
+    .metric-label{
+      color:var(--muted);
+      font-weight:700;
+      font-size:.92rem;
     }
 
-    .insight strong {
-      display: block;
-      margin-bottom: 4px;
+    .metric-value{
+      margin:14px 0 8px;
+      font-size:clamp(1.45rem, 4vw, 2.2rem);
+      line-height:1;
+      letter-spacing:-.04em;
+      font-weight:800;
     }
 
-    .footer-note {
-      margin-top: 16px;
-      color: var(--muted);
-      font-size: 0.9rem;
+    .metric-sub{
+      color:var(--muted);
+      line-height:1.45;
+      font-size:.94rem;
     }
 
-    .status {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 0.9rem;
+    .progress-summary{
+      display:grid;
+      gap:18px;
     }
 
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: var(--good);
-      box-shadow: 0 0 0 6px rgba(34,197,94,0.12);
+    .health-card{
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:20px;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
     }
 
-    .error {
-      color: #fecaca;
-      background: rgba(239,68,68,0.12);
-      border: 1px solid rgba(239,68,68,0.25);
-      padding: 12px 14px;
-      border-radius: 14px;
-      margin-top: 12px;
-      display: none;
-      line-height: 1.5;
+    .health-top{
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+      margin-bottom:16px;
     }
 
-    .empty {
-      color: var(--muted);
-      padding: 12px 0;
+    .health-title{
+      font-weight:800;
+      font-size:1.08rem;
+      letter-spacing:-.02em;
     }
 
-    @media (max-width: 1024px) {
-      .stats { grid-template-columns: repeat(2, 1fr); }
-      .split { grid-template-columns: 1fr; }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:.84rem;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      white-space:nowrap;
     }
 
-    @media (max-width: 680px) {
-      .container { padding: 16px; }
-      .stats { grid-template-columns: 1fr; }
-      th:nth-child(3), td:nth-child(3) { display: none; }
-      .toolbar { width: 100%; }
-      .toolbar button { width: 100%; }
+    .badge.good{color:#c8ffe6; background:rgba(34,197,94,.14); border-color:rgba(34,197,94,.26)}
+    .badge.warn{color:#ffe7b3; background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.24)}
+    .badge.bad{color:#ffd4d4; background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.24)}
+
+    .big-progress{
+      height:16px;
+      width:100%;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      overflow:hidden;
+      position:relative;
+      margin-bottom:14px;
+    }
+
+    .big-progress > span{
+      display:block;
+      height:100%;
+      border-radius:inherit;
+      background:linear-gradient(90deg, var(--accent), #9ed0ff);
+      transition:width .35s ease;
+    }
+
+    .health-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+
+    .mini-card{
+      border-radius:18px;
+      border:1px solid var(--border);
+      padding:14px;
+      background:rgba(255,255,255,.04);
+    }
+
+    .mini-label{
+      color:var(--muted-2);
+      font-size:.82rem;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+
+    .mini-value{
+      margin-top:8px;
+      font-size:1.3rem;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    .comparison{
+      display:grid;
+      gap:14px;
+    }
+
+    .person-card{
+      border:1px solid var(--border);
+      border-radius:22px;
+      padding:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.035));
+    }
+
+    .person-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .person-name{
+      font-weight:800;
+      font-size:1rem;
+      letter-spacing:-.02em;
+    }
+
+    .person-summary{
+      color:var(--muted);
+      font-size:.92rem;
+      line-height:1.5;
+    }
+
+    .person-metrics{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:10px;
+    }
+
+    .person-metric{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      background:rgba(255,255,255,.035);
+    }
+
+    .person-metric strong{
+      display:block;
+      font-size:1rem;
+      letter-spacing:-.02em;
+      margin-top:6px;
+    }
+
+    .person-metric span{
+      color:var(--muted-2);
+      font-size:.8rem;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+
+    .stack{
+      display:grid;
+      gap:12px;
+    }
+
+    .share-bar{
+      display:grid;
+      gap:8px;
+    }
+
+    .share-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      color:var(--muted);
+      font-size:.92rem;
+      font-weight:600;
+    }
+
+    .share-track{
+      height:12px;
+      width:100%;
+      background:rgba(255,255,255,.08);
+      border-radius:999px;
+      overflow:hidden;
+      display:flex;
+    }
+
+    .share-track span{
+      height:100%;
+      display:block;
+    }
+
+    .share-a{background:linear-gradient(90deg, rgba(124,182,255,.95), rgba(158,208,255,.95))}
+    .share-b{background:linear-gradient(90deg, rgba(77,226,197,.95), rgba(113,236,214,.95))}
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:720px;
+    }
+
+    th, td{
+      text-align:left;
+      padding:14px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+
+    th{
+      color:var(--muted);
+      font-size:.84rem;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      font-weight:800;
+    }
+
+    td{
+      font-size:.98rem;
+      color:var(--text);
+    }
+
+    tbody tr:hover{
+      background:rgba(255,255,255,.028);
+    }
+
+    .td-main{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .td-sub{
+      color:var(--muted);
+      font-size:.84rem;
+      line-height:1.4;
+    }
+
+    .good{color:#61ffa8; font-weight:700}
+    .bad{color:#ff8f8f; font-weight:700}
+    .muted{color:var(--muted)}
+
+    .bars{
+      display:grid;
+      gap:12px;
+    }
+
+    .bar-item{
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border-radius:20px;
+      padding:14px 14px 12px;
+    }
+
+    .bar-top{
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      align-items:flex-start;
+      margin-bottom:10px;
+    }
+
+    .bar-name{
+      font-weight:800;
+      letter-spacing:-.02em;
+      margin-bottom:3px;
+    }
+
+    .bar-meta{
+      color:var(--muted);
+      font-size:.88rem;
+      line-height:1.4;
+    }
+
+    .bar-track{
+      height:12px;
+      background:rgba(255,255,255,.08);
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .bar-fill{
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg, var(--accent), #9ed0ff);
+      transition:width .35s ease;
+    }
+
+    .bar-fill.warn{background:linear-gradient(90deg, #f5b340, #ffd484)}
+    .bar-fill.bad{background:linear-gradient(90deg, #ef4444, #ff8f8f)}
+
+    .insights{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:14px;
+    }
+
+    .insight{
+      border:1px solid var(--border);
+      border-radius:22px;
+      padding:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      min-height:148px;
+    }
+
+    .insight-title{
+      font-size:1rem;
+      font-weight:800;
+      letter-spacing:-.02em;
+      margin-bottom:10px;
+    }
+
+    .insight-text{
+      color:var(--muted);
+      line-height:1.6;
+      font-size:.95rem;
+    }
+
+    .inline-note{
+      color:var(--muted);
+      font-size:.92rem;
+      line-height:1.6;
+    }
+
+    .warning-box{
+      display:none;
+      margin-top:16px;
+      border-radius:18px;
+      border:1px solid rgba(245,158,11,.24);
+      background:rgba(245,158,11,.12);
+      color:#ffe6b7;
+      padding:14px 16px;
+      line-height:1.55;
+    }
+
+    .empty{
+      color:var(--muted);
+      padding:10px 0;
+    }
+
+    .footer{
+      margin-top:18px;
+      color:var(--muted);
+      font-size:.9rem;
+      line-height:1.6;
+    }
+
+    @media (max-width: 1180px){
+      .hero{grid-template-columns:1fr}
+      .metrics{grid-template-columns:repeat(2, minmax(0,1fr))}
+      .panel-8,.panel-7,.panel-6,.panel-5,.panel-4{grid-column:span 12}
+      .insights{grid-template-columns:1fr 1fr}
+    }
+
+    @media (max-width: 760px){
+      .shell{padding:16px}
+      .hero-main,.hero-side,.panel{padding:18px}
+      .metrics{grid-template-columns:1fr}
+      .health-grid{grid-template-columns:1fr}
+      .person-metrics{grid-template-columns:1fr}
+      .insights{grid-template-columns:1fr}
+      .toolbar{justify-content:flex-start}
+      .segment{width:100%}
+      .segment button{flex:1 1 auto}
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header class="header">
-      <div class="title-wrap">
-        <h1>Dashboard Financeiro do Casal</h1>
-        <p>
-          Este painel lê uma planilha publicada no Google Sheets, calcula orçamento, gasto, saldo restante e destaca categorias com risco de estouro.
+  <div class="shell">
+    <section class="hero">
+      <div class="hero-main">
+        <div class="eyebrow"><span class="eyebrow-dot"></span><span>Produto financeiro do casal</span></div>
+        <h1>Painel Financeiro do Casal</h1>
+        <p class="hero-text">
+          Uma camada visual em cima do Google Sheets para acompanhar orçamento, gasto, saldo e pressão por categoria, com visão individual e consolidada.
         </p>
-      </div>
-      <div class="toolbar">
-        <button id="reloadBtn">Atualizar dados</button>
-      </div>
-    </header>
-
-    <section class="panel">
-      <div class="panel-header">
-        <div>
-          <h2>Resumo geral</h2>
-          <p id="sheetStatus">Carregando dados da planilha...</p>
+        <div class="hero-meta">
+          <div class="meta-pill" id="connectionSummary">Conectando fontes...</div>
+          <div class="meta-pill" id="currentMode">Modo atual: Casal</div>
+          <div class="meta-pill" id="lastRefreshMeta">Última atualização: aguardando</div>
         </div>
-        <div class="status"><span class="dot"></span><span id="lastUpdate">Aguardando leitura</span></div>
       </div>
 
-      <div class="stats" id="stats"></div>
-      <div class="error" id="errorBox"></div>
-    </section>
-
-    <section class="grid">
-      <div class="panel" style="grid-column: span 7;">
-        <div class="panel-header">
-          <div>
-            <h2>Gastos por categoria</h2>
-            <p>O saldo é recalculado no navegador, então a coluna “Sobra” da planilha pode até nem existir.</p>
+      <div class="hero-side">
+        <div>
+          <div class="hero-side-top">
+            <div>
+              <p class="hero-side-title">Leitura principal</p>
+              <div class="hero-side-value" id="headlineValue">€ 0,00</div>
+              <p class="hero-side-sub" id="headlineText">Preparando o painel para leitura.</p>
+            </div>
+            <div class="toolbar">
+              <button id="reloadBtn">Atualizar dados</button>
+            </div>
           </div>
         </div>
-        <div style="overflow:auto;">
+        <div class="status-line">
+          <span class="status-dot"></span>
+          <span id="statusLine">Aguardando primeira sincronização.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel panel-full">
+      <div class="panel-header">
+        <div>
+          <h2>Visão que você quer analisar</h2>
+          <p>Troque entre o consolidado do casal e as visões individuais sem sair da página.</p>
+        </div>
+        <div class="segment" id="viewSwitch">
+          <button data-view="casal" class="active">Casal</button>
+          <button data-view="maria">Maria</button>
+          <button data-view="gabriel">Gabriel</button>
+        </div>
+      </div>
+
+      <div class="metrics" id="metricGrid"></div>
+      <div class="warning-box" id="warningBox"></div>
+    </section>
+
+    <section class="layout">
+      <section class="panel panel-7">
+        <div class="panel-header">
+          <div>
+            <h2>Radar do orçamento</h2>
+            <p id="healthDescription">Leitura consolidada do orçamento atual.</p>
+          </div>
+          <div class="badge good" id="healthBadge">Saudável</div>
+        </div>
+
+        <div class="progress-summary">
+          <div class="health-card">
+            <div class="health-top">
+              <div>
+                <div class="health-title" id="healthTitle">Orçamento sob controle</div>
+                <p class="inline-note" id="healthText">Assim que os dados forem carregados, esta área resume o cenário.</p>
+              </div>
+            </div>
+            <div class="big-progress"><span id="mainProgressBar" style="width:0%"></span></div>
+            <div class="health-grid">
+              <div class="mini-card">
+                <div class="mini-label">Comprometido</div>
+                <div class="mini-value" id="committedValue">€ 0,00</div>
+              </div>
+              <div class="mini-card">
+                <div class="mini-label">Disponível</div>
+                <div class="mini-value" id="availableValue">€ 0,00</div>
+              </div>
+              <div class="mini-card">
+                <div class="mini-label">Categorias críticas</div>
+                <div class="mini-value" id="criticalValue">0</div>
+              </div>
+              <div class="mini-card">
+                <div class="mini-label">Maior pressão</div>
+                <div class="mini-value" id="topPressureValue">-</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="comparison" id="comparisonBox"></div>
+        </div>
+      </section>
+
+      <section class="panel panel-5">
+        <div class="panel-header">
+          <div>
+            <h2>Consumo por categoria</h2>
+            <p>As barras mostram o quanto cada limite já foi consumido.</p>
+          </div>
+        </div>
+        <div class="bars" id="barsList"></div>
+      </section>
+
+      <section class="panel panel-8">
+        <div class="panel-header">
+          <div>
+            <h2>Detalhamento por categoria</h2>
+            <p id="tableCaption">Leitura detalhada dos dados ativos.</p>
+          </div>
+        </div>
+        <div style="overflow:auto">
           <table>
             <thead>
               <tr>
@@ -358,46 +814,48 @@
             <tbody id="tableBody"></tbody>
           </table>
         </div>
-        <div class="footer-note">
-          Dica importante: a sua planilha visual é aceitável para uso manual, mas ruim como base de dados. O ideal é ter uma aba bruta, sem células mescladas e sem linhas decorativas.
+        <div class="footer">
+          A melhor fonte continua sendo uma aba-base limpa, sem decoração visual misturada com os números. O HTML aguenta imperfeições, mas não faz milagre em cima de base ruim.
         </div>
-      </div>
+      </section>
 
-      <div class="panel" style="grid-column: span 5;">
+      <section class="panel panel-4">
         <div class="panel-header">
           <div>
-            <h2>Consumo do orçamento</h2>
-            <p>Quanto cada categoria já comprometeu do limite definido.</p>
+            <h2>Insights automáticos</h2>
+            <p>Leituras rápidas para não obrigar ninguém a interpretar a planilha no braço.</p>
           </div>
         </div>
-        <div class="bar-list" id="barList"></div>
-      </div>
-
-      <div class="panel" style="grid-column: span 12;">
-        <div class="panel-header">
-          <div>
-            <h2>Leituras automáticas</h2>
-            <p>Insights simples gerados localmente com base nos números da planilha.</p>
-          </div>
-        </div>
-        <div class="insights" id="insights"></div>
-      </div>
+        <div class="insights" id="insightsBox"></div>
+      </section>
     </section>
   </div>
 
   <script>
     const CONFIG = {
-      // Você pode usar a URL publicada em CSV OU a URL normal de edição da planilha.
-      // O script tenta converter automaticamente para CSV quando recebe uma URL /edit.
-      sheetCsvUrl: 'https://docs.google.com/spreadsheets/d/17F67tetUv3_K7rt5kbUJ1iJkehssOcCtprwjc6kWUxU/edit?gid=0#gid=0',
-      currency: 'EUR',
       locale: 'pt-BR',
+      currency: 'EUR',
       refreshMinutes: 10,
+      spreadsheetId: '17F67tetUv3_K7rt5kbUJ1iJkehssOcCtprwjc6kWUxU',
+      sources: {
+        maria: {
+          label: 'Maria',
+          csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRFhyn1x146qLzzfS4DVnDM8FoKWx50PKv89GXENwcmFvnIL6uD-K4LO_l9GrfHgkp6gb3P36JBFdCY/pub?output=csv'
+        },
+        gabriel: {
+          label: 'Gabriel',
+          sheetName: 'gabriel'
+        }
+      }
     };
 
     const state = {
-      items: [],
-      totals: null,
+      activeView: 'casal',
+      datasets: {},
+      totals: {},
+      combinedItems: [],
+      syncErrors: {},
+      lastLoadedAt: null
     };
 
     const $ = (selector) => document.querySelector(selector);
@@ -406,6 +864,8 @@
       return new Intl.NumberFormat(CONFIG.locale, {
         style: 'currency',
         currency: CONFIG.currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
       }).format(Number(value || 0));
     }
 
@@ -413,34 +873,17 @@
       return `${Number(value || 0).toFixed(1)}%`;
     }
 
-    function getSheetCsvUrl(inputUrl) {
-      const raw = String(inputUrl || '').trim();
-      if (!raw) return '';
-      if (raw.includes('/pub?output=csv') || raw.includes('/export?format=csv')) return raw;
-
-      try {
-        const url = new URL(raw);
-        const match = url.pathname.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-        if (!match) return raw;
-
-        const spreadsheetId = match[1];
-        const gid = url.searchParams.get('gid') || '0';
-        return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`;
-      } catch {
-        return raw;
-      }
+    function stripAccents(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
     }
 
-    function showError(message) {
-      const box = $('#errorBox');
-      box.style.display = 'block';
-      box.textContent = message;
-    }
-
-    function hideError() {
-      const box = $('#errorBox');
-      box.style.display = 'none';
-      box.textContent = '';
+    function slugify(value) {
+      return stripAccents(value)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
     }
 
     function parseCSV(text) {
@@ -485,11 +928,11 @@
     function parseMoney(raw) {
       if (raw === null || raw === undefined) return 0;
       const text = String(raw).trim();
-      if (!text) return 0;
+      if (!text || text === '-' || text === '—') return 0;
 
       let cleaned = text
-        .replace(/€/g, '')
-        .replace(/R\$/g, '')
+        .replace(/€/gi, '')
+        .replace(/R\$/gi, '')
         .replace(/\s/g, '')
         .replace(/\.(?=\d{3}(\D|$))/g, '')
         .replace(/,/g, '.');
@@ -507,31 +950,40 @@
       const name = normalizeText(row[0]).toLowerCase();
       if (!name) return false;
       if (name.includes('gastos totais')) return false;
-      if (name === 'total:' || name === 'total') return false;
+      if (name === 'categoria' || name === 'categorias') return false;
+      if (name === 'total' || name === 'total:' || name === 'totais') return false;
       if (name === 'valor limite' || name === 'valor gasto' || name === 'sobra') return false;
       return true;
     }
 
-    function mapRows(rows) {
+    function mapRows(rows, ownerKey) {
       const items = [];
 
       for (const row of rows) {
         if (!looksLikeCategoryRow(row)) continue;
 
         const category = normalizeText(row[0]);
+        if (!category) continue;
+
+        let limit = 0;
+        let spent = 0;
+
         const numericValues = row.slice(1).map(parseMoney).filter(v => Number.isFinite(v));
 
         if (!numericValues.length) continue;
 
-        let limit = numericValues[0] || 0;
-        let spent = numericValues[1] || 0;
-
-        if (row.length >= 4) {
+        if (row.length >= 5 && String(row[1]).trim().match(/^r?\$/i)) {
+          limit = parseMoney(row[2]);
+          spent = parseMoney(row[4]);
+        } else if (row.length >= 4 && String(row[1]).trim() && String(row[2]).trim()) {
           limit = parseMoney(row[1]);
           spent = parseMoney(row[2]);
+        } else {
+          limit = numericValues[0] || 0;
+          spent = numericValues[1] || 0;
         }
 
-        if (!category || (limit === 0 && spent === 0)) continue;
+        if (limit === 0 && spent === 0) continue;
 
         const remainingRaw = limit - spent;
         const remaining = Math.max(remainingRaw, 0);
@@ -539,12 +991,14 @@
         const usage = limit > 0 ? (spent / limit) * 100 : 0;
 
         items.push({
+          key: slugify(category),
           category,
+          owner: ownerKey,
           limit,
           spent,
           remaining,
           exceeded,
-          usage,
+          usage
         });
       }
 
@@ -560,60 +1014,363 @@
       return { totalLimit, totalSpent, totalRemaining, totalExceeded, usage };
     }
 
-    function renderStats(totals) {
+    function getSourceCandidates(key, source) {
+      const candidates = [];
+      if (source.csvUrl) candidates.push(source.csvUrl);
+
+      if (CONFIG.spreadsheetId && source.sheetName) {
+        candidates.push(`https://docs.google.com/spreadsheets/d/${CONFIG.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(source.sheetName)}`);
+      }
+
+      if (CONFIG.spreadsheetId && source.gid) {
+        candidates.push(`https://docs.google.com/spreadsheets/d/${CONFIG.spreadsheetId}/export?format=csv&gid=${source.gid}`);
+      }
+
+      return [...new Set(candidates)];
+    }
+
+    async function fetchFirstAvailable(candidates) {
+      let lastError = null;
+
+      for (const url of candidates) {
+        try {
+          const response = await fetch(url, { cache: 'no-store' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+          const text = await response.text();
+          const normalized = String(text || '').trim();
+
+          if (!normalized) throw new Error('Resposta vazia');
+          if (normalized.startsWith('<!DOCTYPE') || normalized.startsWith('<html')) {
+            throw new Error('Resposta HTML em vez de CSV');
+          }
+
+          return { url, text };
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      throw lastError || new Error('Nenhuma rota de leitura funcionou');
+    }
+
+    function combineDatasets() {
+      const merged = new Map();
+
+      Object.entries(state.datasets).forEach(([ownerKey, items]) => {
+        items.forEach(item => {
+          const key = item.key || slugify(item.category);
+
+          if (!merged.has(key)) {
+            merged.set(key, {
+              key,
+              category: item.category,
+              limit: 0,
+              spent: 0,
+              remaining: 0,
+              exceeded: 0,
+              usage: 0,
+              breakdown: {}
+            });
+          }
+
+          const record = merged.get(key);
+          record.category = record.category || item.category;
+          record.limit += item.limit;
+          record.spent += item.spent;
+          record.breakdown[ownerKey] = {
+            limit: item.limit,
+            spent: item.spent,
+            remaining: item.remaining,
+            usage: item.usage
+          };
+        });
+      });
+
+      const combined = [...merged.values()].map(item => {
+        const remainingRaw = item.limit - item.spent;
+        const remaining = Math.max(remainingRaw, 0);
+        const exceeded = Math.max(item.spent - item.limit, 0);
+        const usage = item.limit > 0 ? (item.spent / item.limit) * 100 : 0;
+
+        return {
+          ...item,
+          remaining,
+          exceeded,
+          usage
+        };
+      });
+
+      state.combinedItems = combined;
+      state.totals.casal = buildTotals(combined);
+    }
+
+    function getActiveItems() {
+      if (state.activeView === 'casal') return state.combinedItems || [];
+      return state.datasets[state.activeView] || [];
+    }
+
+    function getActiveTotals() {
+      return state.totals[state.activeView] || buildTotals([]);
+    }
+
+    function getCriticalCount(items) {
+      return items.filter(item => item.usage >= 100).length;
+    }
+
+    function getNearLimitCount(items) {
+      return items.filter(item => item.usage >= 80 && item.usage < 100).length;
+    }
+
+    function getTopPressure(items) {
+      return [...items].sort((a, b) => b.usage - a.usage)[0] || null;
+    }
+
+    function getHealthState(totals, items) {
+      const critical = getCriticalCount(items);
+      const nearLimit = getNearLimitCount(items);
+
+      if (critical > 0 || totals.totalExceeded > 0 || totals.usage > 100) {
+        return {
+          tone: 'bad',
+          badge: 'Estourado',
+          title: 'Há estouro real ou iminente',
+          text: 'O orçamento já passou do limite em pelo menos uma frente. Aqui não é detalhe visual. É desvio concreto.',
+          subtitle: 'Precisa de correção imediata'
+        };
+      }
+
+      if (nearLimit > 0 || totals.usage >= 80) {
+        return {
+          tone: 'warn',
+          badge: 'Em atenção',
+          title: 'O orçamento ainda respira, mas já pressiona',
+          text: 'Ainda não virou problema consolidado, mas parte do orçamento entrou em zona de atenção e merece ajuste.',
+          subtitle: 'Zona de risco controlável'
+        };
+      }
+
+      return {
+        tone: 'good',
+        badge: 'Saudável',
+        title: 'O orçamento está sob controle',
+        text: 'Não há categoria estourada e o consolidado ainda mantém folga. Bom sinal, mas sem ilusão: controle só existe se continuar assim.',
+        subtitle: 'Leitura estável'
+      };
+    }
+
+    function renderHeader() {
+      const loadedKeys = Object.keys(state.datasets);
+      const loadedLabels = loadedKeys.map(key => CONFIG.sources[key]?.label || key);
+
+      $('#connectionSummary').textContent = loadedLabels.length
+        ? `${loadedLabels.length} fonte(s) conectadas: ${loadedLabels.join(' • ')}`
+        : 'Nenhuma fonte conectada';
+
+      $('#currentMode').textContent = `Modo atual: ${state.activeView === 'casal' ? 'Casal' : CONFIG.sources[state.activeView]?.label || state.activeView}`;
+      $('#lastRefreshMeta').textContent = state.lastLoadedAt
+        ? `Última atualização: ${new Date(state.lastLoadedAt).toLocaleString(CONFIG.locale)}`
+        : 'Última atualização: aguardando';
+
+      if (Object.keys(state.syncErrors).length) {
+        const names = Object.keys(state.syncErrors).map(key => CONFIG.sources[key]?.label || key).join(', ');
+        $('#statusLine').textContent = `Sincronização parcial. Houve falha em: ${names}.`;
+      } else {
+        $('#statusLine').textContent = 'Painel sincronizado com sucesso.';
+      }
+    }
+
+    function renderMetricCards(items, totals) {
+      const critical = getCriticalCount(items);
+      const nearLimit = getNearLimitCount(items);
+      const modeLabel = state.activeView === 'casal' ? 'consolidado do casal' : `recorte individual de ${CONFIG.sources[state.activeView]?.label || state.activeView}`;
+
       const cards = [
         {
           label: 'Orçamento total',
           value: formatCurrency(totals.totalLimit),
-          sub: 'Soma dos limites cadastrados na planilha',
+          sub: `Soma dos limites do ${modeLabel}.`
         },
         {
-          label: 'Gasto total',
+          label: 'Gasto realizado',
           value: formatCurrency(totals.totalSpent),
-          sub: `${formatPercent(totals.usage)} do orçamento comprometido`,
+          sub: `${formatPercent(totals.usage)} do orçamento já comprometido.`
         },
         {
           label: 'Saldo restante',
           value: formatCurrency(totals.totalRemaining),
           sub: totals.totalExceeded > 0
-            ? `Estouro consolidado de ${formatCurrency(totals.totalExceeded)}`
-            : 'Ainda dentro do orçamento geral',
+            ? `Estouro consolidado de ${formatCurrency(totals.totalExceeded)}.`
+            : 'Folga ainda disponível dentro do planejamento.'
         },
         {
-          label: 'Categorias críticas',
-          value: `${state.items.filter(item => item.usage >= 100).length}`,
-          sub: 'Categorias que já bateram ou passaram do limite',
+          label: 'Pressão do orçamento',
+          value: `${critical} crítica(s) / ${nearLimit} em atenção`,
+          sub: 'Crítica = bateu 100%. Atenção = passou de 80%.'
         }
       ];
 
-      $('#stats').innerHTML = cards.map(card => `
-        <div class="stat-card">
-          <div class="stat-label">${card.label}</div>
-          <div class="stat-value">${card.value}</div>
-          <div class="stat-sub">${card.sub}</div>
-        </div>
+      $('#metricGrid').innerHTML = cards.map(card => `
+        <article class="metric">
+          <div class="metric-label">${card.label}</div>
+          <div class="metric-value">${card.value}</div>
+          <div class="metric-sub">${card.sub}</div>
+        </article>
       `).join('');
+    }
+
+    function renderHealth(items, totals) {
+      const health = getHealthState(totals, items);
+      const topPressure = getTopPressure(items);
+
+      $('#healthDescription').textContent = state.activeView === 'casal'
+        ? 'Leitura consolidada dos dois lados do orçamento.'
+        : `Leitura do orçamento individual de ${CONFIG.sources[state.activeView]?.label || state.activeView}.`;
+
+      $('#healthBadge').className = `badge ${health.tone}`;
+      $('#healthBadge').textContent = health.badge;
+      $('#healthTitle').textContent = health.title;
+      $('#healthText').textContent = health.text;
+      $('#mainProgressBar').style.width = `${Math.min(totals.usage, 100)}%`;
+      $('#mainProgressBar').style.background = health.tone === 'bad'
+        ? 'linear-gradient(90deg, #ef4444, #ff8f8f)'
+        : health.tone === 'warn'
+          ? 'linear-gradient(90deg, #f5b340, #ffd484)'
+          : 'linear-gradient(90deg, #7cb6ff, #9ed0ff)';
+
+      $('#committedValue').textContent = `${formatCurrency(totals.totalSpent)} · ${formatPercent(totals.usage)}`;
+      $('#availableValue').textContent = formatCurrency(totals.totalRemaining);
+      $('#criticalValue').textContent = `${getCriticalCount(items)}`;
+      $('#topPressureValue').textContent = topPressure ? `${topPressure.category} · ${formatPercent(topPressure.usage)}` : '-';
+
+      $('#headlineValue').textContent = formatCurrency(totals.totalRemaining);
+      $('#headlineText').textContent = health.subtitle;
+    }
+
+    function renderComparison() {
+      const box = $('#comparisonBox');
+
+      if (state.activeView !== 'casal') {
+        const activeKey = state.activeView;
+        const totals = state.totals[activeKey] || buildTotals([]);
+        const health = getHealthState(state.datasets[activeKey] || [], state.datasets[activeKey] || []);
+        box.innerHTML = `
+          <article class="person-card">
+            <div class="person-head">
+              <div>
+                <div class="person-name">${CONFIG.sources[activeKey]?.label || activeKey}</div>
+                <div class="person-summary">Visão focada só nesse orçamento. Boa para enxergar responsabilidade individual sem misturar com o consolidado.</div>
+              </div>
+              <div class="badge ${getHealthState(totals, state.datasets[activeKey] || []).tone}">
+                ${getHealthState(totals, state.datasets[activeKey] || []).badge}
+              </div>
+            </div>
+            <div class="person-metrics">
+              <div class="person-metric"><span>Limite</span><strong>${formatCurrency(totals.totalLimit)}</strong></div>
+              <div class="person-metric"><span>Gasto</span><strong>${formatCurrency(totals.totalSpent)}</strong></div>
+              <div class="person-metric"><span>Saldo</span><strong>${formatCurrency(totals.totalRemaining)}</strong></div>
+            </div>
+          </article>
+        `;
+        return;
+      }
+
+      const mariaTotals = state.totals.maria || buildTotals([]);
+      const gabrielTotals = state.totals.gabriel || buildTotals([]);
+      const combinedSpent = mariaTotals.totalSpent + gabrielTotals.totalSpent || 0;
+      const mariaShare = combinedSpent ? (mariaTotals.totalSpent / combinedSpent) * 100 : 0;
+      const gabrielShare = combinedSpent ? (gabrielTotals.totalSpent / combinedSpent) * 100 : 0;
+
+      box.innerHTML = `
+        <article class="person-card">
+          <div class="person-head">
+            <div>
+              <div class="person-name">Distribuição entre vocês</div>
+              <div class="person-summary">Isso ajuda a ver peso relativo no gasto do mês, não só o consolidado total.</div>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="share-bar">
+              <div class="share-head">
+                <span>Participação no gasto do casal</span>
+                <span>${formatPercent(mariaShare)} Maria · ${formatPercent(gabrielShare)} Gabriel</span>
+              </div>
+              <div class="share-track">
+                <span class="share-a" style="width:${mariaShare}%"></span>
+                <span class="share-b" style="width:${gabrielShare}%"></span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="person-card">
+          <div class="person-head">
+            <div>
+              <div class="person-name">Maria</div>
+              <div class="person-summary">Orçamento, gasto e saldo individuais.</div>
+            </div>
+            <div class="badge ${getHealthState(mariaTotals, state.datasets.maria || []).tone}">${getHealthState(mariaTotals, state.datasets.maria || []).badge}</div>
+          </div>
+          <div class="person-metrics">
+            <div class="person-metric"><span>Limite</span><strong>${formatCurrency(mariaTotals.totalLimit)}</strong></div>
+            <div class="person-metric"><span>Gasto</span><strong>${formatCurrency(mariaTotals.totalSpent)}</strong></div>
+            <div class="person-metric"><span>Saldo</span><strong>${formatCurrency(mariaTotals.totalRemaining)}</strong></div>
+          </div>
+        </article>
+
+        <article class="person-card">
+          <div class="person-head">
+            <div>
+              <div class="person-name">Gabriel</div>
+              <div class="person-summary">Orçamento, gasto e saldo individuais.</div>
+            </div>
+            <div class="badge ${getHealthState(gabrielTotals, state.datasets.gabriel || []).tone}">${getHealthState(gabrielTotals, state.datasets.gabriel || []).badge}</div>
+          </div>
+          <div class="person-metrics">
+            <div class="person-metric"><span>Limite</span><strong>${formatCurrency(gabrielTotals.totalLimit)}</strong></div>
+            <div class="person-metric"><span>Gasto</span><strong>${formatCurrency(gabrielTotals.totalSpent)}</strong></div>
+            <div class="person-metric"><span>Saldo</span><strong>${formatCurrency(gabrielTotals.totalRemaining)}</strong></div>
+          </div>
+        </article>
+      `;
     }
 
     function renderTable(items) {
       const body = $('#tableBody');
+
       if (!items.length) {
-        body.innerHTML = `<tr><td colspan="5" class="empty">Nenhum dado válido encontrado.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="5" class="empty">Nenhum dado válido encontrado na visão atual.</td></tr>`;
         return;
       }
 
-      body.innerHTML = items
+      $('#tableCaption').textContent = state.activeView === 'casal'
+        ? 'Categorias somadas entre Maria e Gabriel.'
+        : `Categorias do orçamento individual de ${CONFIG.sources[state.activeView]?.label || state.activeView}.`;
+
+      body.innerHTML = [...items]
         .sort((a, b) => b.usage - a.usage)
         .map(item => {
           const balanceClass = item.exceeded > 0 ? 'bad' : 'good';
-          const usageText = item.usage > 100 ? `${formatPercent(item.usage)} (estourou)` : formatPercent(item.usage);
+          const usageText = item.usage > 100 ? `${formatPercent(item.usage)} · estourou` : formatPercent(item.usage);
           const balanceValue = item.exceeded > 0 ? -item.exceeded : item.remaining;
+          const breakdownText = state.activeView === 'casal'
+            ? [
+                item.breakdown?.maria ? `Maria: ${formatCurrency(item.breakdown.maria.spent)}` : null,
+                item.breakdown?.gabriel ? `Gabriel: ${formatCurrency(item.breakdown.gabriel.spent)}` : null
+              ].filter(Boolean).join(' • ')
+            : `Uso atual de ${formatPercent(item.usage)} nesta categoria`;
+
           return `
             <tr>
-              <td>${item.category}</td>
+              <td>
+                <div class="td-main">
+                  <span>${item.category}</span>
+                  <span class="td-sub">${breakdownText || 'Sem detalhe complementar'}</span>
+                </div>
+              </td>
               <td>${formatCurrency(item.limit)}</td>
               <td>${formatCurrency(item.spent)}</td>
-              <td class="money ${balanceClass}">${formatCurrency(balanceValue)}</td>
+              <td class="${balanceClass}">${formatCurrency(balanceValue)}</td>
               <td>${usageText}</td>
             </tr>
           `;
@@ -622,19 +1379,21 @@
     }
 
     function renderBars(items) {
-      const container = $('#barList');
+      const box = $('#barsList');
+
       if (!items.length) {
-        container.innerHTML = `<div class="empty">Sem categorias para exibir.</div>`;
+        box.innerHTML = `<div class="empty">Sem categorias para exibir.</div>`;
         return;
       }
 
-      container.innerHTML = items
+      box.innerHTML = [...items]
         .sort((a, b) => b.usage - a.usage)
+        .slice(0, 10)
         .map(item => {
+          const className = item.usage >= 100 ? 'bad' : item.usage >= 80 ? 'warn' : '';
           const width = Math.min(item.usage, 100);
-          const className = item.usage >= 100 ? 'danger' : item.usage >= 80 ? 'warning' : '';
           return `
-            <div class="bar-item">
+            <article class="bar-item">
               <div class="bar-top">
                 <div>
                   <div class="bar-name">${item.category}</div>
@@ -645,7 +1404,7 @@
               <div class="bar-track">
                 <div class="bar-fill ${className}" style="width:${width}%"></div>
               </div>
-            </div>
+            </article>
           `;
         })
         .join('');
@@ -653,106 +1412,149 @@
 
     function buildInsights(items, totals) {
       const insights = [];
-      const exceeded = items.filter(item => item.usage >= 100).sort((a, b) => b.usage - a.usage);
-      const nearLimit = items.filter(item => item.usage >= 80 && item.usage < 100).sort((a, b) => b.usage - a.usage);
+      const topPressure = getTopPressure(items);
       const biggestSpend = [...items].sort((a, b) => b.spent - a.spent)[0];
       const largestRemaining = [...items].sort((a, b) => b.remaining - a.remaining)[0];
+      const critical = getCriticalCount(items);
+      const nearLimit = getNearLimitCount(items);
 
-      if (exceeded.length) {
+      if (state.activeView === 'casal') {
+        const mariaTotals = state.totals.maria || buildTotals([]);
+        const gabrielTotals = state.totals.gabriel || buildTotals([]);
+        const topSpender = mariaTotals.totalSpent >= gabrielTotals.totalSpent ? 'Maria' : 'Gabriel';
         insights.push({
-          title: 'Atenção imediata',
-          text: `${exceeded.length} categoria(s) já ultrapassaram o limite. A mais crítica é ${exceeded[0].category}, com ${formatPercent(exceeded[0].usage)} de uso.`
-        });
-      } else {
-        insights.push({
-          title: 'Situação geral',
-          text: 'Nenhuma categoria estourou o limite até agora. Isso é bom, mas não prova controle fino. Só prova que ainda não passou.'
-        });
-      }
-
-      if (nearLimit.length) {
-        insights.push({
-          title: 'Risco de estouro',
-          text: `${nearLimit.length} categoria(s) estão acima de 80% do orçamento. A mais próxima do limite é ${nearLimit[0].category}.`
-        });
-      }
-
-      if (biggestSpend) {
-        insights.push({
-          title: 'Maior peso no orçamento',
-          text: `${biggestSpend.category} é a categoria com maior gasto absoluto, somando ${formatCurrency(biggestSpend.spent)}.`
-        });
-      }
-
-      if (largestRemaining) {
-        insights.push({
-          title: 'Maior folga atual',
-          text: `${largestRemaining.category} ainda concentra a maior sobra nominal: ${formatCurrency(largestRemaining.remaining)}.`
+          title: 'Peso relativo do casal',
+          text: `${topSpender} está com o maior gasto absoluto neste recorte. Isso não é julgamento. É só o peso financeiro atual aparecendo.`
         });
       }
 
       insights.push({
-        title: 'Leitura consolidada',
-        text: `O casal já consumiu ${formatPercent(totals.usage)} do orçamento total. O saldo agregado disponível é ${formatCurrency(totals.totalRemaining)}.`
+        title: 'Pressão principal',
+        text: topPressure
+          ? `${topPressure.category} é a categoria mais pressionada, com ${formatPercent(topPressure.usage)} do limite usado.`
+          : 'Ainda não há categoria suficiente para leitura de pressão.'
       });
 
-      return insights.slice(0, 5);
+      insights.push({
+        title: 'Leitura de risco',
+        text: critical > 0
+          ? `${critical} categoria(s) já estouraram o limite. A conversa correta aqui não é estética do painel. É decisão de gasto.`
+          : nearLimit > 0
+            ? `${nearLimit} categoria(s) estão acima de 80% do limite. Ainda há margem, mas ela já começou a apertar.`
+            : 'Nenhuma categoria entrou em faixa crítica ou de atenção por enquanto.'
+      });
+
+      insights.push({
+        title: 'Maior gasto',
+        text: biggestSpend
+          ? `${biggestSpend.category} concentra o maior gasto absoluto: ${formatCurrency(biggestSpend.spent)}.`
+          : 'Sem dados suficientes para apontar a categoria mais pesada.'
+      });
+
+      insights.push({
+        title: 'Maior folga',
+        text: largestRemaining
+          ? `${largestRemaining.category} preserva a maior sobra nominal: ${formatCurrency(largestRemaining.remaining)}.`
+          : 'Sem dados suficientes para apontar sobra relevante.'
+      });
+
+      insights.push({
+        title: 'Leitura consolidada',
+        text: `O recorte atual consumiu ${formatPercent(totals.usage)} do orçamento e ainda mantém ${formatCurrency(totals.totalRemaining)} disponíveis.`
+      });
+
+      return insights.slice(0, 6);
     }
 
     function renderInsights(items, totals) {
-      const insights = buildInsights(items, totals);
-      $('#insights').innerHTML = insights.map(item => `
-        <div class="insight">
-          <strong>${item.title}</strong>
-          <span>${item.text}</span>
-        </div>
+      $('#insightsBox').innerHTML = buildInsights(items, totals).map(item => `
+        <article class="insight">
+          <div class="insight-title">${item.title}</div>
+          <div class="insight-text">${item.text}</div>
+        </article>
       `).join('');
     }
 
-    async function loadSheet() {
-      hideError();
+    function renderWarnings() {
+      const box = $('#warningBox');
+      const entries = Object.entries(state.syncErrors);
 
-      if (!CONFIG.sheetCsvUrl || CONFIG.sheetCsvUrl.includes('COLE_AQUI')) {
-        showError('Você ainda não configurou a URL da planilha. Edite a constante CONFIG.sheetCsvUrl no início do JavaScript.');
-        $('#sheetStatus').textContent = 'URL da planilha não configurada.';
+      if (!entries.length) {
+        box.style.display = 'none';
+        box.textContent = '';
         return;
       }
 
-      try {
-        $('#sheetStatus').textContent = 'Buscando dados da planilha...';
+      const text = entries
+        .map(([key, message]) => `${CONFIG.sources[key]?.label || key}: ${message}`)
+        .join(' | ');
 
-        const response = await fetch(getSheetCsvUrl(CONFIG.sheetCsvUrl), { cache: 'no-store' });
-        if (!response.ok) throw new Error(`Falha ao ler planilha: HTTP ${response.status}. Verifique se a planilha está pública ou publicada para acesso externo`);
-
-        const csvText = await response.text();
-        const rows = parseCSV(csvText);
-        const items = mapRows(rows);
-
-        if (!items.length) {
-          throw new Error('A planilha foi lida, mas nenhuma linha válida foi reconhecida. Revise a estrutura da aba e evite células mescladas ou cabeçalhos decorativos.');
-        }
-
-        state.items = items;
-        state.totals = buildTotals(items);
-
-        renderStats(state.totals);
-        renderTable(state.items);
-        renderBars(state.items);
-        renderInsights(state.items, state.totals);
-
-        $('#sheetStatus').textContent = `${items.length} categoria(s) carregadas com sucesso.`;
-        $('#lastUpdate').textContent = `Atualizado em ${new Date().toLocaleString(CONFIG.locale)}`;
-      } catch (error) {
-        console.error(error);
-        showError(`${error.message} O problema mais comum aqui é querer usar uma planilha bonita como base de dados. O dashboard precisa de estrutura consistente.`);
-        $('#sheetStatus').textContent = 'Erro ao carregar os dados.';
-      }
+      box.style.display = 'block';
+      box.textContent = `Sincronização parcial. ${text}`;
     }
 
-    $('#reloadBtn').addEventListener('click', loadSheet);
-    loadSheet();
+    function refreshActiveView() {
+      const items = getActiveItems();
+      const totals = getActiveTotals();
 
-    setInterval(loadSheet, CONFIG.refreshMinutes * 60 * 1000);
+      renderHeader();
+      renderMetricCards(items, totals);
+      renderHealth(items, totals);
+      renderComparison();
+      renderTable(items);
+      renderBars(items);
+      renderInsights(items, totals);
+      renderWarnings();
+
+      document.querySelectorAll('#viewSwitch button').forEach(button => {
+        button.classList.toggle('active', button.dataset.view === state.activeView);
+      });
+    }
+
+    async function loadAllSources() {
+      state.syncErrors = {};
+      state.datasets = {};
+      state.totals = {};
+      $('#statusLine').textContent = 'Atualizando fontes...';
+
+      const entries = Object.entries(CONFIG.sources);
+
+      await Promise.all(entries.map(async ([key, source]) => {
+        try {
+          const candidates = getSourceCandidates(key, source);
+          if (!candidates.length) throw new Error('Nenhuma URL configurada para esta fonte');
+
+          const result = await fetchFirstAvailable(candidates);
+          const rows = parseCSV(result.text);
+          const items = mapRows(rows, key);
+
+          if (!items.length) {
+            throw new Error('Leitura concluída, mas nenhuma linha válida foi encontrada');
+          }
+
+          state.datasets[key] = items;
+          state.totals[key] = buildTotals(items);
+        } catch (error) {
+          state.syncErrors[key] = error.message || 'Falha desconhecida';
+        }
+      }));
+
+      combineDatasets();
+      state.lastLoadedAt = Date.now();
+      refreshActiveView();
+    }
+
+    document.querySelectorAll('#viewSwitch button').forEach(button => {
+      button.addEventListener('click', () => {
+        state.activeView = button.dataset.view;
+        refreshActiveView();
+      });
+    });
+
+    $('#reloadBtn').addEventListener('click', loadAllSources);
+
+    loadAllSources();
+    setInterval(loadAllSources, CONFIG.refreshMinutes * 60 * 1000);
   </script>
 </body>
 </html>
