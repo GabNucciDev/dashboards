@@ -85,11 +85,7 @@
 
           <div class="sidebar-group">
             <span class="sidebar-group-title">Menu principal</span>
-            <button class="nav-link active" type="button" data-screen-target="overview">Visão financeira</button>
-            <button class="nav-link" type="button" data-screen-target="categories">Cadastro de categoria</button>
-            <button class="nav-link" type="button" data-screen-target="transactions">Lançamentos</button>
-            <button class="nav-link" type="button" data-screen-target="budget">Orçamento</button>
-            <button class="nav-link" type="button" data-screen-target="history">Histórico</button>
+            <button class="nav-link active" type="button" data-screen-target="management">Gestão financeira</button>
           </div>
 
           <div class="sidebar-group sidebar-settings-group">
@@ -119,7 +115,7 @@
 
           <div id="appMessage"></div>
 
-          <section class="surface section-block" data-screen="overview">
+          <section class="surface section-block" data-screen="management">
             <div class="section-head compact-head">
               <div>
                 <span class="eyebrow">Visão financeira</span>
@@ -139,7 +135,7 @@
             <div class="scope-filters" id="scopeFilters"></div>
           </section>
 
-          <section class="stats-grid" data-screen="overview">
+          <section class="stats-grid" data-screen="management">
             <article class="surface metric-card">
               <span class="metric-label">Limite do mês</span>
               <strong class="metric-value" id="totalBudget">R$ 0,00</strong>
@@ -162,92 +158,94 @@
             </article>
           </section>
 
-          <section class="surface section-block" data-screen="categories" hidden>
-            <div class="section-head compact-head">
-              <div>
-                <span class="eyebrow">Cadastro</span>
-                <h3>Criar categoria e limite do mês</h3>
-                <p class="section-subtitle">Defina primeiro a caixa financeira onde essa categoria vive.</p>
+          <div class="management-panels" data-screen="management">
+            <section class="surface section-block" id="categoriesPanel">
+              <div class="section-head compact-head">
+                <div>
+                  <span class="eyebrow">Cadastro</span>
+                  <h3>Criar categoria e limite do mês</h3>
+                  <p class="section-subtitle">Defina primeiro a caixa financeira onde essa categoria vive.</p>
+                </div>
               </div>
-            </div>
 
-            <div class="field">
-              <label for="categoryName">Nome da categoria</label>
-              <input id="categoryName" type="text" placeholder="Ex.: Mercado" />
-            </div>
-
-            <div class="grid grid-2">
               <div class="field">
-                <label for="categoryOwnerScope">Escopo financeiro</label>
-                <select id="categoryOwnerScope">
-                  <option value="shared">Compartilhado</option>
+                <label for="categoryName">Nome da categoria</label>
+                <input id="categoryName" type="text" placeholder="Ex.: Mercado" />
+              </div>
+
+              <div class="grid grid-2">
+                <div class="field">
+                  <label for="categoryOwnerScope">Escopo financeiro</label>
+                  <select id="categoryOwnerScope">
+                    <option value="shared">Compartilhado</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="categoryCurrency">Moeda</label>
+                  <select id="categoryCurrency">
+                    <option value="BRL">BRL</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="budgetAmount">Limite mensal</label>
+                <input id="budgetAmount" type="text" placeholder="Ex.: 350,00" />
+              </div>
+
+              <div class="form-actions">
+                <button class="btn btn-primary" id="btnCreateCategory">Salvar categoria</button>
+              </div>
+            </section>
+
+            <section class="surface section-block" id="transactionsPanel">
+              <div class="section-head compact-head">
+                <div>
+                  <span class="eyebrow">Lançamentos</span>
+                  <h3>Adicionar gasto</h3>
+                  <p class="section-subtitle">Escolha a categoria certa e registre o gasto do mês.</p>
+                </div>
+              </div>
+
+              <div class="grid grid-2">
+                <div class="field">
+                  <label for="txDate">Data</label>
+                  <input id="txDate" type="date" />
+                </div>
+                <div class="field">
+                  <label for="txCurrency">Moeda</label>
+                  <select id="txCurrency">
+                    <option value="BRL">BRL</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="txCategory">Categoria</label>
+                <select id="txCategory">
+                  <option value="">Selecione</option>
                 </select>
               </div>
+
               <div class="field">
-                <label for="categoryCurrency">Moeda</label>
-                <select id="categoryCurrency">
-                  <option value="BRL">BRL</option>
-                  <option value="EUR">EUR</option>
-                </select>
+                <label for="txAmount">Valor</label>
+                <input id="txAmount" type="text" placeholder="Ex.: 45,90" />
               </div>
-            </div>
 
-            <div class="field">
-              <label for="budgetAmount">Limite mensal</label>
-              <input id="budgetAmount" type="text" placeholder="Ex.: 350,00" />
-            </div>
-
-            <div class="form-actions">
-              <button class="btn btn-primary" id="btnCreateCategory">Salvar categoria</button>
-            </div>
-          </section>
-
-          <section class="surface section-block" data-screen="transactions" hidden>
-            <div class="section-head compact-head">
-              <div>
-                <span class="eyebrow">Lançamentos</span>
-                <h3>Adicionar gasto</h3>
-                <p class="section-subtitle">Escolha a categoria certa e registre o gasto do mês.</p>
-              </div>
-            </div>
-
-            <div class="grid grid-2">
               <div class="field">
-                <label for="txDate">Data</label>
-                <input id="txDate" type="date" />
+                <label for="txDescription">Descrição</label>
+                <input id="txDescription" type="text" placeholder="Ex.: mercado, gasolina, aluguel" />
               </div>
-              <div class="field">
-                <label for="txCurrency">Moeda</label>
-                <select id="txCurrency">
-                  <option value="BRL">BRL</option>
-                  <option value="EUR">EUR</option>
-                </select>
+
+              <div class="form-actions">
+                <button class="btn btn-primary" id="btnAddTransaction">Salvar gasto</button>
               </div>
-            </div>
+            </section>
+          </div>
 
-            <div class="field">
-              <label for="txCategory">Categoria</label>
-              <select id="txCategory">
-                <option value="">Selecione</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="txAmount">Valor</label>
-              <input id="txAmount" type="text" placeholder="Ex.: 45,90" />
-            </div>
-
-            <div class="field">
-              <label for="txDescription">Descrição</label>
-              <input id="txDescription" type="text" placeholder="Ex.: mercado, gasolina, aluguel" />
-            </div>
-
-            <div class="form-actions">
-              <button class="btn btn-primary" id="btnAddTransaction">Salvar gasto</button>
-            </div>
-          </section>
-
-          <section class="surface section-block table-block" data-screen="budget" hidden>
+          <section class="surface section-block table-block" data-screen="management">
             <div class="section-head">
               <div>
                 <span class="eyebrow">Orçamento</span>
@@ -258,7 +256,7 @@
             <div id="budgetsTable"></div>
           </section>
 
-          <section class="surface section-block table-block" data-screen="history" hidden>
+          <section class="surface section-block table-block" data-screen="management">
             <div class="section-head">
               <div>
                 <span class="eyebrow">Histórico</span>
@@ -319,7 +317,6 @@
           </section>
         </div>
       </div>
-
       <div class="modal-backdrop" id="categoryModal" hidden>
         <div class="modal-card">
           <div class="modal-head">
@@ -467,11 +464,11 @@
           <div id="onboardingStep3" class="onboarding-step-pane" hidden>
             <div class="onboarding-finish-card inner-card">
               <strong>Estrutura pronta.</strong>
-              <p>Agora é com você: pode começar a lançar os gastos do mês. O menu lateral já separa visão financeira, categorias, lançamentos, orçamento, histórico e configurações.</p>
+              <p>Agora é com você: pode começar a lançar os gastos do mês. A área de Gestão financeira concentra visão, categorias, lançamentos, orçamento e histórico em uma única navegação.</p>
             </div>
             <div class="modal-actions">
               <button class="btn btn-secondary" type="button" data-close-modal="onboardingModal">Fechar</button>
-              <button class="btn btn-primary" type="button" id="btnOnboardingGoTransactions">Ir para lançamentos</button>
+              <button class="btn btn-primary" type="button" id="btnOnboardingGoTransactions">Ir para gestão</button>
             </div>
           </div>
         </div>
