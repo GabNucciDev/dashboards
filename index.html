@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Financeiro do Casal</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --card: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.12);
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --good: #22c55e;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --accent: #60a5fa;
+      --shadow: 0 20px 40px rgba(0,0,0,0.25);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(96,165,250,0.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(34,197,94,0.12), transparent 22%),
+        linear-gradient(180deg, #0b1220 0%, #111827 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .title-wrap h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.7rem, 3vw, 2.6rem);
+      line-height: 1.1;
+    }
+
+    .title-wrap p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.5;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button, .chip {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 12px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: .2s ease;
+      backdrop-filter: blur(8px);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.1);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .panel {
+      grid-column: span 12;
+      background: rgba(17,24,39,0.72);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: clamp(1.4rem, 2vw, 2rem);
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+    }
+
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 1.1rem;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .panel-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 14px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.96rem;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    tbody tr:hover {
+      background: rgba(255,255,255,0.03);
+    }
+
+    .money.good { color: var(--good); font-weight: 700; }
+    .money.bad { color: var(--bad); font-weight: 700; }
+    .money.warn { color: var(--warn); font-weight: 700; }
+
+    .bar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .bar-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .bar-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    .bar-name {
+      font-weight: 700;
+    }
+
+    .bar-meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .bar-track {
+      height: 12px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      width: 0;
+      transition: width .5s ease;
+      background: linear-gradient(90deg, var(--accent), #93c5fd);
+    }
+
+    .bar-fill.warning {
+      background: linear-gradient(90deg, var(--warn), #fcd34d);
+    }
+
+    .bar-fill.danger {
+      background: linear-gradient(90deg, var(--bad), #fca5a5);
+    }
+
+    .insights {
+      display: grid;
+      gap: 12px;
+    }
+
+    .insight {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      line-height: 1.5;
+    }
+
+    .insight strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--good);
+      box-shadow: 0 0 0 6px rgba(34,197,94,0.12);
+    }
+
+    .error {
+      color: #fecaca;
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.25);
+      padding: 12px 14px;
+      border-radius: 14px;
+      margin-top: 12px;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 12px 0;
+    }
+
+    @media (max-width: 1024px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .split { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 680px) {
+      .container { padding: 16px; }
+      .stats { grid-template-columns: 1fr; }
+      th:nth-child(3), td:nth-child(3) { display: none; }
+      .toolbar { width: 100%; }
+      .toolbar button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="title-wrap">
+        <h1>Dashboard Financeiro do Casal</h1>
+        <p>
+          Este painel lê uma planilha publicada no Google Sheets, calcula orçamento, gasto, saldo restante e destaca categorias com risco de estouro.
+        </p>
+      </div>
+      <div class="toolbar">
+        <button id="reloadBtn">Atualizar dados</button>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Resumo geral</h2>
+          <p id="sheetStatus">Carregando dados da planilha...</p>
+        </div>
+        <div class="status"><span class="dot"></span><span id="lastUpdate">Aguardando leitura</span></div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+      <div class="error" id="errorBox"></div>
+    </section>
+
+    <section class="grid">
+      <div class="panel" style="grid-column: span 7;">
+        <div class="panel-header">
+          <div>
+            <h2>Gastos por categoria</h2>
+            <p>O saldo é recalculado no navegador, então a coluna “Sobra” da planilha pode até nem existir.</p>
+          </div>
+        </div>
+        <div style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Categoria</th>
+                <th>Limite</th>
+                <th>Gasto</th>
+                <th>Saldo</th>
+                <th>Uso</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div class="footer-note">
+          Dica importante: a sua planilha visual é aceitável para uso manual, mas ruim como base de dados. O ideal é ter uma aba bruta, sem células mescladas e sem linhas decorativas.
+        </div>
+      </div>
+
+      <div class="panel" style="grid-column: span 5;">
+        <div class="panel-header">
+          <div>
+            <h2>Consumo do orçamento</h2>
+            <p>Quanto cada categoria já comprometeu do limite definido.</p>
+          </div>
+        </div>
+        <div class="bar-list" id="barList"></div>
+      </div>
+
+      <div class="panel" style="grid-column: span 12;">
+        <div class="panel-header">
+          <div>
+            <h2>Leituras automáticas</h2>
+            <p>Insights simples gerados localmente com base nos números da planilha.</p>
+          </div>
+        </div>
+        <div class="insights" id="insights"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const CONFIG = {
+      // Troque pela URL CSV publicada da sua planilha.
+      // Exemplo: https://docs.google.com/spreadsheets/d/e/SEU_ID/pub?output=csv
+      sheetCsvUrl: 'COLE_AQUI_SUA_URL_CSV',
+      currency: 'EUR',
+      locale: 'pt-BR',
+      refreshMinutes: 10,
+    };
+
+    const state = {
+      items: [],
+      totals: null,
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat(CONFIG.locale, {
+        style: 'currency',
+        currency: CONFIG.currency,
+      }).format(Number(value || 0));
+    }
+
+    function formatPercent(value) {
+      return `${Number(value || 0).toFixed(1)}%`;
+    }
+
+    function showError(message) {
+      const box = $('#errorBox');
+      box.style.display = 'block';
+      box.textContent = message;
+    }
+
+    function hideError() {
+      const box = $('#errorBox');
+      box.style.display = 'none';
+      box.textContent = '';
+    }
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [];
+      let current = '';
+      let insideQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"') {
+          if (insideQuotes && next === '"') {
+            current += '"';
+            i++;
+          } else {
+            insideQuotes = !insideQuotes;
+          }
+        } else if (char === ',' && !insideQuotes) {
+          row.push(current);
+          current = '';
+        } else if ((char === '\n' || char === '\r') && !insideQuotes) {
+          if (char === '\r' && next === '\n') i++;
+          row.push(current);
+          if (row.some(cell => String(cell).trim() !== '')) rows.push(row);
+          row = [];
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+
+      if (current.length || row.length) {
+        row.push(current);
+        if (row.some(cell => String(cell).trim() !== '')) rows.push(row);
+      }
+
+      return rows;
+    }
+
+    function parseMoney(raw) {
+      if (raw === null || raw === undefined) return 0;
+      const text = String(raw).trim();
+      if (!text) return 0;
+
+      let cleaned = text
+        .replace(/€/g, '')
+        .replace(/R\$/g, '')
+        .replace(/\s/g, '')
+        .replace(/\.(?=\d{3}(\D|$))/g, '')
+        .replace(/,/g, '.');
+
+      cleaned = cleaned.replace(/[^0-9.-]/g, '');
+      const value = Number(cleaned);
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    function normalizeText(value) {
+      return String(value || '').trim();
+    }
+
+    function looksLikeCategoryRow(row) {
+      const name = normalizeText(row[0]).toLowerCase();
+      if (!name) return false;
+      if (name.includes('gastos totais')) return false;
+      if (name === 'total:' || name === 'total') return false;
+      if (name === 'valor limite' || name === 'valor gasto' || name === 'sobra') return false;
+      return true;
+    }
+
+    function mapRows(rows) {
+      const items = [];
+
+      for (const row of rows) {
+        if (!looksLikeCategoryRow(row)) continue;
+
+        const category = normalizeText(row[0]);
+        const numericValues = row.slice(1).map(parseMoney).filter(v => Number.isFinite(v));
+
+        if (!numericValues.length) continue;
+
+        let limit = numericValues[0] || 0;
+        let spent = numericValues[1] || 0;
+
+        if (row.length >= 4) {
+          limit = parseMoney(row[1]);
+          spent = parseMoney(row[2]);
+        }
+
+        if (!category || (limit === 0 && spent === 0)) continue;
+
+        const remainingRaw = limit - spent;
+        const remaining = Math.max(remainingRaw, 0);
+        const exceeded = Math.max(spent - limit, 0);
+        const usage = limit > 0 ? (spent / limit) * 100 : 0;
+
+        items.push({
+          category,
+          limit,
+          spent,
+          remaining,
+          exceeded,
+          usage,
+        });
+      }
+
+      return items;
+    }
+
+    function buildTotals(items) {
+      const totalLimit = items.reduce((sum, item) => sum + item.limit, 0);
+      const totalSpent = items.reduce((sum, item) => sum + item.spent, 0);
+      const totalRemaining = Math.max(totalLimit - totalSpent, 0);
+      const totalExceeded = Math.max(totalSpent - totalLimit, 0);
+      const usage = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
+      return { totalLimit, totalSpent, totalRemaining, totalExceeded, usage };
+    }
+
+    function renderStats(totals) {
+      const cards = [
+        {
+          label: 'Orçamento total',
+          value: formatCurrency(totals.totalLimit),
+          sub: 'Soma dos limites cadastrados na planilha',
+        },
+        {
+          label: 'Gasto total',
+          value: formatCurrency(totals.totalSpent),
+          sub: `${formatPercent(totals.usage)} do orçamento comprometido`,
+        },
+        {
+          label: 'Saldo restante',
+          value: formatCurrency(totals.totalRemaining),
+          sub: totals.totalExceeded > 0
+            ? `Estouro consolidado de ${formatCurrency(totals.totalExceeded)}`
+            : 'Ainda dentro do orçamento geral',
+        },
+        {
+          label: 'Categorias críticas',
+          value: `${state.items.filter(item => item.usage >= 100).length}`,
+          sub: 'Categorias que já bateram ou passaram do limite',
+        }
+      ];
+
+      $('#stats').innerHTML = cards.map(card => `
+        <div class="stat-card">
+          <div class="stat-label">${card.label}</div>
+          <div class="stat-value">${card.value}</div>
+          <div class="stat-sub">${card.sub}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderTable(items) {
+      const body = $('#tableBody');
+      if (!items.length) {
+        body.innerHTML = `<tr><td colspan="5" class="empty">Nenhum dado válido encontrado.</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = items
+        .sort((a, b) => b.usage - a.usage)
+        .map(item => {
+          const balanceClass = item.exceeded > 0 ? 'bad' : 'good';
+          const usageText = item.usage > 100 ? `${formatPercent(item.usage)} (estourou)` : formatPercent(item.usage);
+          const balanceValue = item.exceeded > 0 ? -item.exceeded : item.remaining;
+          return `
+            <tr>
+              <td>${item.category}</td>
+              <td>${formatCurrency(item.limit)}</td>
+              <td>${formatCurrency(item.spent)}</td>
+              <td class="money ${balanceClass}">${formatCurrency(balanceValue)}</td>
+              <td>${usageText}</td>
+            </tr>
+          `;
+        })
+        .join('');
+    }
+
+    function renderBars(items) {
+      const container = $('#barList');
+      if (!items.length) {
+        container.innerHTML = `<div class="empty">Sem categorias para exibir.</div>`;
+        return;
+      }
+
+      container.innerHTML = items
+        .sort((a, b) => b.usage - a.usage)
+        .map(item => {
+          const width = Math.min(item.usage, 100);
+          const className = item.usage >= 100 ? 'danger' : item.usage >= 80 ? 'warning' : '';
+          return `
+            <div class="bar-item">
+              <div class="bar-top">
+                <div>
+                  <div class="bar-name">${item.category}</div>
+                  <div class="bar-meta">${formatCurrency(item.spent)} de ${formatCurrency(item.limit)}</div>
+                </div>
+                <div class="bar-meta">${formatPercent(item.usage)}</div>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill ${className}" style="width:${width}%"></div>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    function buildInsights(items, totals) {
+      const insights = [];
+      const exceeded = items.filter(item => item.usage >= 100).sort((a, b) => b.usage - a.usage);
+      const nearLimit = items.filter(item => item.usage >= 80 && item.usage < 100).sort((a, b) => b.usage - a.usage);
+      const biggestSpend = [...items].sort((a, b) => b.spent - a.spent)[0];
+      const largestRemaining = [...items].sort((a, b) => b.remaining - a.remaining)[0];
+
+      if (exceeded.length) {
+        insights.push({
+          title: 'Atenção imediata',
+          text: `${exceeded.length} categoria(s) já ultrapassaram o limite. A mais crítica é ${exceeded[0].category}, com ${formatPercent(exceeded[0].usage)} de uso.`
+        });
+      } else {
+        insights.push({
+          title: 'Situação geral',
+          text: 'Nenhuma categoria estourou o limite até agora. Isso é bom, mas não prova controle fino. Só prova que ainda não passou.'
+        });
+      }
+
+      if (nearLimit.length) {
+        insights.push({
+          title: 'Risco de estouro',
+          text: `${nearLimit.length} categoria(s) estão acima de 80% do orçamento. A mais próxima do limite é ${nearLimit[0].category}.`
+        });
+      }
+
+      if (biggestSpend) {
+        insights.push({
+          title: 'Maior peso no orçamento',
+          text: `${biggestSpend.category} é a categoria com maior gasto absoluto, somando ${formatCurrency(biggestSpend.spent)}.`
+        });
+      }
+
+      if (largestRemaining) {
+        insights.push({
+          title: 'Maior folga atual',
+          text: `${largestRemaining.category} ainda concentra a maior sobra nominal: ${formatCurrency(largestRemaining.remaining)}.`
+        });
+      }
+
+      insights.push({
+        title: 'Leitura consolidada',
+        text: `O casal já consumiu ${formatPercent(totals.usage)} do orçamento total. O saldo agregado disponível é ${formatCurrency(totals.totalRemaining)}.`
+      });
+
+      return insights.slice(0, 5);
+    }
+
+    function renderInsights(items, totals) {
+      const insights = buildInsights(items, totals);
+      $('#insights').innerHTML = insights.map(item => `
+        <div class="insight">
+          <strong>${item.title}</strong>
+          <span>${item.text}</span>
+        </div>
+      `).join('');
+    }
+
+    async function loadSheet() {
+      hideError();
+
+      if (!CONFIG.sheetCsvUrl || CONFIG.sheetCsvUrl.includes('COLE_AQUI')) {
+        showError('Você ainda não configurou a URL CSV da planilha publicada. Edite a constante CONFIG.sheetCsvUrl no início do JavaScript.');
+        $('#sheetStatus').textContent = 'URL da planilha não configurada.';
+        return;
+      }
+
+      try {
+        $('#sheetStatus').textContent = 'Buscando dados da planilha publicada...';
+
+        const response = await fetch(CONFIG.sheetCsvUrl, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Falha ao ler planilha: HTTP ${response.status}`);
+
+        const csvText = await response.text();
+        const rows = parseCSV(csvText);
+        const items = mapRows(rows);
+
+        if (!items.length) {
+          throw new Error('A planilha foi lida, mas nenhuma linha válida foi reconhecida. Revise a estrutura dos dados.');
+        }
+
+        state.items = items;
+        state.totals = buildTotals(items);
+
+        renderStats(state.totals);
+        renderTable(state.items);
+        renderBars(state.items);
+        renderInsights(state.items, state.totals);
+
+        $('#sheetStatus').textContent = `${items.length} categoria(s) carregadas com sucesso.`;
+        $('#lastUpdate').textContent = `Atualizado em ${new Date().toLocaleString(CONFIG.locale)}`;
+      } catch (error) {
+        console.error(error);
+        showError(`${error.message} O problema mais comum aqui é querer usar uma planilha bonita como base de dados. O dashboard precisa de estrutura consistente.`);
+        $('#sheetStatus').textContent = 'Erro ao carregar os dados.';
+      }
+    }
+
+    $('#reloadBtn').addEventListener('click', loadSheet);
+    loadSheet();
+
+    setInterval(loadSheet, CONFIG.refreshMinutes * 60 * 1000);
+  </script>
+</body>
+</html>
