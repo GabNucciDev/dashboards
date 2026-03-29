@@ -64,6 +64,11 @@ button, input, select, textarea { border: 0; }
   background: linear-gradient(180deg, rgba(204,255,0,0.58), rgba(204,255,0,0.3));
 }
 
+
+[hidden] {
+  display: none !important;
+}
+
 .app-frame {
   width: min(1400px, calc(100vw - 48px));
   margin: 32px auto;
