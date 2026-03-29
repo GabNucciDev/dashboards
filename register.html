@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOMA — Criar conta</title>
+  <meta name="description" content="Criar conta no SOMA." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="app-frame">
+    <section id="signupView" class="auth-layout auth-layout-register">
+      <div class="auth-panel auth-copy-panel">
+        <div class="brand-block">
+          <div class="brand-mark">
+            <span class="brand-soma">SOMA</span>
+          </div>
+          <p class="brand-caption">Comece sua casa com a estrutura certa.</p>
+        </div>
+
+        <div class="hero-copy">
+          <span class="eyebrow">Cadastro separado do login</span>
+          <h1>Crie sua conta e já entre com a moeda padrão certa.</h1>
+          <p>
+            Cada pessoa entra com o próprio acesso. Depois, vocês se conectam à mesma casa e passam a acompanhar o mês com mais ordem.
+          </p>
+        </div>
+
+        <div class="feature-list">
+          <div class="feature-chip">Conta individual</div>
+          <div class="feature-chip">Mesma casa compartilhada</div>
+          <div class="feature-chip">BRL ou EUR</div>
+        </div>
+      </div>
+
+      <div class="auth-panel auth-form-panel">
+        <div class="auth-card">
+          <div class="brand-compact">
+            <h2><span>SOMA</span></h2>
+            <p>Gestão financeira de casal e família</p>
+          </div>
+
+          <div class="auth-heading">
+            <h3>Criar conta</h3>
+            <p>Cadastre seu nome, sua moeda padrão e seu acesso inicial.</p>
+          </div>
+
+          <div class="field">
+            <label for="signupName">Nome</label>
+            <input id="signupName" type="text" placeholder="Ex.: Gabriel" autocomplete="name" />
+          </div>
+
+          <div class="field">
+            <label for="signupCurrency">Moeda padrão</label>
+            <select id="signupCurrency">
+              <option value="BRL">Real (BRL)</option>
+              <option value="EUR">Euro (EUR)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="signupEmail">E-mail</label>
+            <input id="signupEmail" type="email" placeholder="voce@email.com" autocomplete="email" />
+          </div>
+
+          <div class="field">
+            <label for="signupPassword">Senha</label>
+            <input id="signupPassword" type="password" placeholder="Crie uma senha" autocomplete="new-password" />
+          </div>
+
+          <div class="stack-actions">
+            <button class="btn btn-primary btn-block" id="btnSignup">Criar conta</button>
+            <div id="authMessage"></div>
+          </div>
+
+          <div class="auth-footer-box">
+            <p>Depois do cadastro, volte para a tela de login para entrar normalmente.</p>
+          </div>
+
+          <div class="auth-switch">
+            <a href="./index.html">← Voltar para login</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
