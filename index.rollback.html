@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOMA</title>
+  <meta name="description" content="SOMA — gestão financeira de casal e família, com visão da casa, do individual e do compartilhado." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="app-frame">
+    <section id="authView" class="auth-layout">
+      <div class="auth-panel auth-copy-panel">
+        <div class="brand-block">
+          <div class="brand-mark">
+            <span class="brand-soma">SOMA</span>
+          </div>
+          <p class="brand-caption">Finanças a dois, com clareza.</p>
+        </div>
+
+        <div class="hero-copy">
+          <span class="eyebrow">Visibilidade total sobre o dinheiro da casa</span>
+          <h1>Entenda o que é seu, o que é da outra pessoa e o que é compartilhado.</h1>
+          <p>
+            O SOMA organiza a casa em três caixas financeiras: individual, da outra pessoa e compartilhado.
+            Assim vocês acompanham o mês com mais clareza e menos atrito.
+          </p>
+        </div>
+
+        <div class="feature-list">
+          <div class="feature-chip">Visão da casa</div>
+          <div class="feature-chip">Escopos individuais</div>
+          <div class="feature-chip">Compartilhado do casal</div>
+        </div>
+      </div>
+
+      <div class="auth-panel auth-form-panel">
+        <div class="auth-card">
+          <div class="brand-compact">
+            <h2><span>SOMA</span></h2>
+            <p>Gestão financeira de casal e família</p>
+          </div>
+
+          <div class="auth-heading">
+            <h3>Entrar</h3>
+            <p>Use seu e-mail e sua senha para entrar na sua casa financeira.</p>
+          </div>
+
+          <div class="field">
+            <label for="loginEmail">E-mail</label>
+            <input id="loginEmail" type="email" placeholder="voce@email.com" autocomplete="email" />
+          </div>
+
+          <div class="field">
+            <label for="loginPassword">Senha</label>
+            <input id="loginPassword" type="password" placeholder="Sua senha" autocomplete="current-password" />
+          </div>
+
+          <div class="stack-actions">
+            <button class="btn btn-primary btn-block" id="btnLogin" data-default-label="Entrar">Entrar</button>
+            <div id="authMessage"></div>
+          </div>
+
+          <div class="auth-footer-box">
+            <p>Ainda não tem conta? Crie aqui.</p>
+          </div>
+
+          <div class="auth-switch">
+            <a href="./register.html">Criar conta →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="appView" hidden>
+      <div class="workspace">
+        <aside class="sidebar surface">
+          <div class="sidebar-brand">
+            <span class="brand-inline-name">SOMA</span>
+            <span class="brand-inline-subtitle">Casa, individual e compartilhado</span>
+          </div>
+
+          <div class="sidebar-group">
+            <span class="sidebar-group-title">Menu principal</span>
+            <button class="nav-link active" type="button" data-screen-target="management">Gestão financeira</button>
+          </div>
+
+          <div class="sidebar-group sidebar-settings-group">
+            <span class="sidebar-group-title">Configurações</span>
+            <button class="nav-link" type="button" data-screen-target="settings">Casa e acesso</button>
+          </div>
+        </aside>
+
+        <div class="content-shell">
+          <header class="topbar surface">
+            <div class="topbar-left">
+              <div class="user-inline no-divider">
+                <strong id="currentUserName">Usuário</strong>
+                <span id="currentUserEmail">email</span>
+              </div>
+            </div>
+
+            <div class="topbar-right">
+              <div class="month-inline">
+                <span>Mês de referência</span>
+                <input id="selectedMonth" type="month" />
+              </div>
+              <button class="btn btn-secondary" id="btnOpenOnboarding">Primeiros passos</button>
+              <button class="btn btn-secondary" id="btnLogout">Sair</button>
+            </div>
+          </header>
+
+          <div id="appMessage"></div>
+
+          <section class="surface section-block" data-screen="management">
+            <div class="section-head compact-head">
+              <div>
+                <span class="eyebrow">Visão financeira</span>
+                <h3 id="currentViewTitle">Visão da casa</h3>
+                <p class="section-subtitle" id="currentViewSubtitle">Resumo do mês, leitura do recorte atual e próximas ações.</p>
+              </div>
+            </div>
+
+            <div class="scope-tabs" id="scopeFilters"></div>
+            <p class="view-tab-caption" id="viewTabCaption">Você está vendo a casa inteira: individual + compartilhado.</p>
+          </section>
+
+          <section class="stats-grid" data-screen="management">
+            <article class="surface metric-card">
+              <span class="metric-label">Limite do mês</span>
+              <strong class="metric-value" id="totalBudget">R$ 0,00</strong>
+              <span class="metric-foot">No recorte da visão atual.</span>
+            </article>
+            <article class="surface metric-card">
+              <span class="metric-label">Gasto do mês</span>
+              <strong class="metric-value" id="totalSpent">R$ 0,00</strong>
+              <span class="metric-foot">Somente os lançamentos dessa visão.</span>
+            </article>
+            <article class="surface metric-card">
+              <span class="metric-label">Saldo do mês</span>
+              <strong class="metric-value" id="totalRemaining">R$ 0,00</strong>
+              <span class="metric-foot">Quanto ainda resta nessa caixa financeira.</span>
+            </article>
+            <article class="surface metric-card">
+              <span class="metric-label">Categorias ativas</span>
+              <strong class="metric-value" id="totalCategories">0</strong>
+              <span class="metric-foot">Categorias com limite no recorte atual.</span>
+            </article>
+          </section>
+
+          <section class="decision-layout" data-screen="management">
+            <article class="surface decision-card decision-status-card" id="decisionStatusCard">
+              <div class="decision-head">
+                <span class="eyebrow">Status do mês</span>
+                <span class="status-pill healthy" id="decisionStatusPill">Saudável</span>
+              </div>
+              <strong class="decision-title" id="decisionStatusTitle">Orçamento sob controle</strong>
+              <p class="decision-copy" id="decisionStatusSummary">O ritmo de gasto está compatível com o momento do mês.</p>
+              <div class="decision-meta-row">
+                <span id="decisionMonthProgress">Mês percorrido: 0%</span>
+                <span id="decisionSpendProgress">Orçamento usado: 0%</span>
+              </div>
+            </article>
+
+            <article class="surface decision-card">
+              <div class="decision-head">
+                <span class="eyebrow">Alertas do momento</span>
+              </div>
+              <ul class="decision-list" id="decisionAlerts">
+                <li class="decision-list-item muted">Nenhum alerta por enquanto.</li>
+              </ul>
+            </article>
+
+            <article class="surface decision-card">
+              <div class="decision-head">
+                <span class="eyebrow">Próxima ação sugerida</span>
+              </div>
+              <strong class="decision-title" id="decisionActionTitle">Continue registrando o mês</strong>
+              <p class="decision-copy" id="decisionActionBody">Mantenha os lançamentos em dia para o SOMA continuar lendo o orçamento com precisão.</p>
+            </article>
+          </section>
+
+          <div class="management-panels" data-screen="management">
+            <section class="surface section-block" id="categoriesPanel">
+              <div class="section-head compact-head">
+                <div>
+                  <span class="eyebrow">Cadastro</span>
+                  <h3>Criar categoria e limite do mês</h3>
+                  <p class="section-subtitle">Defina em qual recorte essa categoria existe e qual limite mensal ela deve respeitar.</p>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="categoryName">Nome da categoria</label>
+                <input id="categoryName" type="text" placeholder="Ex.: Mercado" />
+              </div>
+
+              <div class="grid grid-2">
+                <div class="field">
+                  <label for="categoryOwnerScope">Escopo financeiro</label>
+                  <select id="categoryOwnerScope">
+                    <option value="shared">Compartilhado</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="categoryCurrency">Moeda</label>
+                  <select id="categoryCurrency">
+                    <option value="BRL">BRL</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="budgetAmount">Limite mensal</label>
+                <input id="budgetAmount" type="text" placeholder="Ex.: 350,00" />
+              </div>
+
+              <div class="form-actions">
+                <button class="btn btn-primary" id="btnCreateCategory">Salvar categoria</button>
+              </div>
+            </section>
+
+            <section class="surface section-block" id="transactionsPanel">
+              <div class="section-head compact-head">
+                <div>
+                  <span class="eyebrow">Lançamentos</span>
+                  <h3>Adicionar gasto</h3>
+                  <p class="section-subtitle">Registre o gasto certo no recorte certo para a leitura do mês ficar confiável.</p>
+                </div>
+              </div>
+
+              <div class="grid grid-2">
+                <div class="field">
+                  <label for="txDate">Data</label>
+                  <input id="txDate" type="date" />
+                </div>
+                <div class="field">
+                  <label for="txCurrency">Moeda</label>
+                  <select id="txCurrency">
+                    <option value="BRL">BRL</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="txCategory">Categoria</label>
+                <select id="txCategory">
+                  <option value="">Selecione</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="txAmount">Valor</label>
+                <input id="txAmount" type="text" placeholder="Ex.: 45,90" />
+              </div>
+
+              <div class="field">
+                <label for="txDescription">Descrição</label>
+                <input id="txDescription" type="text" placeholder="Ex.: mercado, gasolina, aluguel" />
+              </div>
+
+              <div class="form-actions">
+                <button class="btn btn-primary" id="btnAddTransaction">Salvar gasto</button>
+              </div>
+            </section>
+          </div>
+
+          <section class="surface section-block table-block" data-screen="management">
+            <div class="section-head">
+              <div>
+                <span class="eyebrow">Orçamento</span>
+                <h3>Limites por categoria no mês</h3>
+                <p class="section-subtitle">Organizados por caixa financeira, com edição e exclusão.</p>
+              </div>
+            </div>
+            <div id="budgetsTable"></div>
+          </section>
+
+          <section class="surface section-block table-block" data-screen="management">
+            <div class="section-head">
+              <div>
+                <span class="eyebrow">Histórico</span>
+                <h3>Lançamentos do mês</h3>
+                <p class="section-subtitle">Edite ou exclua gastos dentro da visão selecionada.</p>
+              </div>
+            </div>
+            <div id="transactionsTable"></div>
+          </section>
+
+          <section class="surface section-block" data-screen="settings" hidden>
+            <div class="section-head">
+              <div>
+                <span class="eyebrow">Configurações</span>
+                <h3>Casa e acesso</h3>
+                <p class="section-subtitle">É aqui que você cria a casa, entra em outra e copia o ID quando precisar convidar alguém.</p>
+              </div>
+            </div>
+
+            <div class="grid grid-2 equal-grid">
+              <div class="form-card inner-card">
+                <div class="field">
+                  <label for="householdName">Criar nova casa</label>
+                  <input id="householdName" type="text" placeholder="Ex.: Casa Gabriel &amp; Maria" />
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn-primary" id="btnCreateHousehold">Criar casa</button>
+                </div>
+              </div>
+
+              <div class="form-card inner-card">
+                <div class="field">
+                  <label for="joinHouseholdId">Entrar em casa existente</label>
+                  <input id="joinHouseholdId" type="text" placeholder="Cole o ID da casa aqui" />
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn-secondary" id="btnJoinHousehold">Entrar na casa</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="household-toolbar">
+              <div class="mini-label">Casas disponíveis</div>
+              <div class="household-list" id="householdList"></div>
+            </div>
+
+            <div class="active-household-card inner-card" id="activeHouseholdCard" hidden>
+              <div class="active-household-copy">
+                <span class="mini-label">ID da casa ativa</span>
+                <strong id="activeHouseholdName">Casa ativa</strong>
+                <code id="activeHouseholdId">—</code>
+                <p class="section-subtitle">Guarde esse ID. É ele que a outra pessoa usa para entrar na mesma casa depois.</p>
+              </div>
+              <div class="active-household-actions">
+                <button class="btn btn-secondary" id="btnCopyHouseholdId" type="button">Copiar ID</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="modal-backdrop" id="categoryModal" hidden>
+        <div class="modal-card">
+          <div class="modal-head">
+            <div>
+              <span class="eyebrow">Categoria</span>
+              <h3 id="categoryModalTitle">Editar categoria</h3>
+            </div>
+            <button class="icon-btn" type="button" data-close-modal="categoryModal">✕</button>
+          </div>
+
+          <div class="field">
+            <label for="editCategoryName">Nome da categoria</label>
+            <input id="editCategoryName" type="text" placeholder="Nome da categoria" />
+          </div>
+
+          <div class="grid grid-2">
+            <div class="field">
+              <label for="editCategoryOwnerScope">Escopo financeiro</label>
+              <select id="editCategoryOwnerScope">
+                <option value="shared">Compartilhado</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="editCategoryCurrency">Moeda</label>
+              <select id="editCategoryCurrency">
+                <option value="BRL">BRL</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="editBudgetAmount">Limite mensal</label>
+            <input id="editBudgetAmount" type="text" placeholder="Ex.: 350,00" />
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-secondary" type="button" data-close-modal="categoryModal">Cancelar</button>
+            <button class="btn btn-primary" type="button" id="btnSaveCategoryEdit">Salvar alterações</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-backdrop" id="transactionModal" hidden>
+        <div class="modal-card">
+          <div class="modal-head">
+            <div>
+              <span class="eyebrow">Lançamento</span>
+              <h3 id="transactionModalTitle">Editar gasto</h3>
+            </div>
+            <button class="icon-btn" type="button" data-close-modal="transactionModal">✕</button>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="field">
+              <label for="editTxDate">Data</label>
+              <input id="editTxDate" type="date" />
+            </div>
+            <div class="field">
+              <label for="editTxCurrency">Moeda</label>
+              <select id="editTxCurrency">
+                <option value="BRL">BRL</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="editTxCategory">Categoria</label>
+            <select id="editTxCategory">
+              <option value="">Selecione</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="editTxAmount">Valor</label>
+            <input id="editTxAmount" type="text" placeholder="Ex.: 45,90" />
+          </div>
+
+          <div class="field">
+            <label for="editTxDescription">Descrição</label>
+            <input id="editTxDescription" type="text" placeholder="Descrição do gasto" />
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-secondary" type="button" data-close-modal="transactionModal">Cancelar</button>
+            <button class="btn btn-primary" type="button" id="btnSaveTransactionEdit">Salvar alterações</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-backdrop" id="onboardingModal" hidden>
+        <div class="modal-card onboarding-card onboarding-wizard-card">
+          <div class="modal-head">
+            <div>
+              <span class="eyebrow" id="onboardingStepBadge">Passo 1 de 3</span>
+              <h3 id="onboardingStepTitle">Crie sua casa</h3>
+              <p class="section-subtitle" id="onboardingStepDescription">Comece criando a casa onde as finanças vão morar.</p>
+            </div>
+            <button class="icon-btn" type="button" data-close-modal="onboardingModal">✕</button>
+          </div>
+
+          <div id="onboardingStep1" class="onboarding-step-pane">
+            <div class="field">
+              <label for="onboardingHouseholdName">Nome da casa</label>
+              <input id="onboardingHouseholdName" type="text" placeholder="Ex.: Casa Gabriel &amp; Maria" />
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-primary" type="button" id="btnOnboardingCreateHousehold">Criar casa e continuar</button>
+            </div>
+          </div>
+
+          <div id="onboardingStep2" class="onboarding-step-pane" hidden>
+            <div class="field">
+              <label for="onboardingCategoryName">Primeira categoria</label>
+              <input id="onboardingCategoryName" type="text" placeholder="Ex.: Mercado" />
+            </div>
+
+            <div class="grid grid-2">
+              <div class="field">
+                <label for="onboardingCategoryScope">Escopo financeiro</label>
+                <select id="onboardingCategoryScope">
+                  <option value="shared">Compartilhado</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="onboardingCategoryCurrency">Moeda</label>
+                <select id="onboardingCategoryCurrency">
+                  <option value="BRL">BRL</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="onboardingBudgetAmount">Limite mensal</label>
+              <input id="onboardingBudgetAmount" type="text" placeholder="Ex.: 350,00" />
+            </div>
+
+            <div class="modal-actions">
+              <button class="btn btn-primary" type="button" id="btnOnboardingCreateCategory">Salvar categoria e continuar</button>
+            </div>
+          </div>
+
+          <div id="onboardingStep3" class="onboarding-step-pane" hidden>
+            <div class="onboarding-finish-card inner-card">
+              <strong>Próximo passo: lançar o primeiro gasto.</strong>
+              <ul class="onboarding-checklist">
+                <li>Abra a área de Gestão financeira</li>
+                <li>Escolha a categoria certa</li>
+                <li>Registre o valor do primeiro gasto do mês</li>
+              </ul>
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" type="button" data-close-modal="onboardingModal">Fechar</button>
+              <button class="btn btn-primary" type="button" id="btnOnboardingGoTransactions">Lançar primeiro gasto</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./app.rollback.js?v=20260401-02"></script>
+</body>
+</html>
