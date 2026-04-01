@@ -21,6 +21,7 @@ const state = {
   isHydrating: false,
   hasBooted: false,
   refreshToken: 0,
+  isSavingTransaction: false,
 };
 
 const el = {
@@ -201,22 +202,6 @@ function bindEvents() {
   bindClick('btnOnboardingGoTransactions', finishOnboarding);
   bindClick('btnCopyHouseholdId', copyActiveHouseholdId);
 
-  document.addEventListener('click', async (event) => {
-    const trigger = event.target?.closest?.('#btnAddTransaction');
-    if (!trigger) return;
-    if (trigger.dataset.boundDirectClick === 'handled') return;
-    if (trigger.disabled) return;
-    event.preventDefault();
-    await addTransaction();
-  }, true);
-
-  const txButton = byId('btnAddTransaction');
-  if (txButton) {
-    txButton.addEventListener('click', () => {
-      txButton.dataset.boundDirectClick = 'handled';
-      queueMicrotask(() => { delete txButton.dataset.boundDirectClick; });
-    }, true);
-  }
 
   document.querySelectorAll('[data-screen-target]').forEach((node) => {
     node.addEventListener('click', () => setActiveScreen(node.dataset.screenTarget));
@@ -742,6 +727,11 @@ async function createCategoryFromOnboarding() {
 async function addTransaction() {
   clearMessages();
 
+  if (state.isSavingTransaction) {
+    showActionFeedback('Já existe um lançamento sendo salvo. Aguarde terminar.', 'info', 'transactionsPanel');
+    return;
+  }
+
   if (!state.activeHouseholdId) {
     showAppMessage('Crie ou entre em uma casa antes.', 'error');
     return;
@@ -781,6 +771,7 @@ async function addTransaction() {
     return;
   }
 
+  state.isSavingTransaction = true;
   setButtonLoading(submitButton, true, 'Salvando');
 
   try {
@@ -801,18 +792,53 @@ async function addTransaction() {
       return;
     }
 
+    const optimisticTransaction = {
+      id: `temp-${Date.now()}`,
+      household_id: state.activeHouseholdId,
+      owner_user_id: state.user.id,
+      category_id,
+      occurred_on,
+      amount,
+      currency,
+      description,
+      created_at: new Date().toISOString(),
+      categories: {
+        id: category.id,
+        name: category.name,
+        scope: category.scope,
+        owner_user_id: category.owner_user_id,
+      },
+      scopeKey: getScopeKey(category),
+      scopeLabel: getScopeLabelFromCategory(category),
+    };
+
+    state.transactions = [optimisticTransaction, ...state.transactions.filter((item) => !String(item.id).startsWith('temp-'))];
+
     if (el.txAmount) el.txAmount.value = '';
     if (el.txDescription) el.txDescription.value = '';
 
-    await loadBudgetsAndTransactions();
-    renderCategoryOptions();
     renderDashboard();
-    showActionFeedback('Gasto lançado com sucesso.', 'success', 'transactionsPanel');
+    showActionFeedback('Gasto lançado com sucesso. Atualizando o painel em segundo plano...', 'success', 'transactionsPanel');
   } catch (error) {
     console.error(error);
     showActionFeedback('Não foi possível salvar o gasto agora. Tente de novo.', 'error', 'transactionsPanel');
+    return;
   } finally {
+    state.isSavingTransaction = false;
     setButtonLoading(submitButton, false);
+  }
+
+  backgroundRefreshAfterTransactionSave();
+}
+
+async function backgroundRefreshAfterTransactionSave() {
+  try {
+    await withTimeout(loadBudgetsAndTransactions(), 12000, 'Atualização do painel demorou demais');
+    renderCategoryOptions();
+    renderDashboard();
+  } catch (error) {
+    console.error(error);
+    showActionFeedback('O gasto foi salvo, mas o painel demorou para atualizar. Recarregue a página se necessário.', 'info', 'transactionsPanel');
   }
 }
 
@@ -1892,6 +1918,25 @@ function parseCurrencyInput(value) {
   }
 
   return Number(normalized);
+}
+
+
+function withTimeout(promise, ms, message = 'A operação excedeu o tempo esperado.') {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error(message));
+    }, ms);
+
+    Promise.resolve(promise)
+      .then((value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      });
+  });
 }
 
 function escapeHtml(text) {
