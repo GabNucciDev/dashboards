@@ -192,6 +192,7 @@ function bindEvents() {
   if (el.selectedMonth) {
     el.selectedMonth.addEventListener('change', async (e) => {
       state.selectedMonth = e.target.value;
+      syncTransactionDateWithSelectedMonth();
       await loadBudgetsAndTransactions();
       renderCategoryOptions();
       renderDashboard();
@@ -730,7 +731,10 @@ async function createCategoryFromOnboarding() {
 async function addTransaction() {
   clearMessages();
 
-  if (state.isHydrating) return;
+  if (state.isHydrating) {
+    showAppMessage('Aguarde a tela terminar de carregar e tente novamente.', 'info');
+    return;
+  }
 
   if (!state.activeHouseholdId) {
     showAppMessage('Crie ou entre em uma casa antes.', 'error');
@@ -742,35 +746,59 @@ async function addTransaction() {
   const amount = parseCurrencyInput(valueOf(el.txAmount));
   const currency = el.txCurrency?.value;
   const description = valueOf(el.txDescription);
+  const submitButton = byId('btnAddTransaction');
 
   if (!occurred_on || !category_id || Number.isNaN(amount) || amount <= 0) {
     showAppMessage('Preencha data, categoria e valor válido.', 'error');
     return;
   }
 
-  const { error } = await supabase.from('transactions').insert([
-    {
-      household_id: state.activeHouseholdId,
-      owner_user_id: state.user.id,
-      category_id,
-      occurred_on,
-      amount,
-      currency,
-      description,
-    },
-  ]);
-
-  if (error) {
-    showAppMessage(mapSupabaseError(error), 'error');
+  if (!isDateInYearMonth(occurred_on, state.selectedMonth)) {
+    showAppMessage('A data do lançamento precisa estar dentro do mês de referência selecionado.', 'error');
+    syncTransactionDateWithSelectedMonth(true);
     return;
   }
 
-  if (el.txAmount) el.txAmount.value = '';
-  if (el.txDescription) el.txDescription.value = '';
+  const category = state.categories.find((item) => item.id === category_id);
+  if (!category) {
+    showAppMessage('A categoria escolhida não está disponível nesta visão.', 'error');
+    renderCategoryOptions();
+    return;
+  }
 
-  await loadBudgetsAndTransactions();
-  renderDashboard();
-  showAppMessage('Gasto lançado com sucesso.', 'success');
+  setButtonLoading(submitButton, true, 'Salvando');
+
+  try {
+    const { error } = await supabase.from('transactions').insert([
+      {
+        household_id: state.activeHouseholdId,
+        owner_user_id: state.user.id,
+        category_id,
+        occurred_on,
+        amount,
+        currency,
+        description,
+      },
+    ]);
+
+    if (error) {
+      showAppMessage(mapSupabaseError(error), 'error');
+      return;
+    }
+
+    if (el.txAmount) el.txAmount.value = '';
+    if (el.txDescription) el.txDescription.value = '';
+
+    await loadBudgetsAndTransactions();
+    renderCategoryOptions();
+    renderDashboard();
+    showAppMessage('Gasto lançado com sucesso.', 'success');
+  } catch (error) {
+    console.error(error);
+    showAppMessage('Não foi possível salvar o gasto agora. Tente de novo.', 'error');
+  } finally {
+    setButtonLoading(submitButton, false);
+  }
 }
 
 function renderAuthState() {
@@ -795,6 +823,7 @@ function renderApp() {
 
   setButtonLoading(el.btnLogin, false);
   if (el.selectedMonth) el.selectedMonth.value = state.selectedMonth;
+  syncTransactionDateWithSelectedMonth();
   if (el.authView) el.authView.hidden = true;
   if (el.appView) el.appView.hidden = false;
 
@@ -944,6 +973,8 @@ function renderScopeFilters() {
     button.textContent = item.label;
     button.addEventListener('click', () => {
       state.selectedView = item.key;
+      renderOwnerScopeOptions();
+      renderCategoryOptions();
       renderDashboard();
       renderScopeFilters();
     });
@@ -980,15 +1011,29 @@ function buildOwnerScopeOptions() {
 }
 
 function renderCategoryOptions() {
+  const visibleCategories = getVisibleCategoriesForSelection();
   const options = ['<option value="">Selecione</option>'];
+  const currentTxCategory = el.txCategory?.value || '';
+  const currentEditTxCategory = el.editTxCategory?.value || '';
 
-  getVisibleCategoriesForSelection().forEach((category) => {
+  visibleCategories.forEach((category) => {
     const scopeLabel = getScopeLabelFromCategory(category);
     options.push(`<option value="${category.id}">${escapeHtml(scopeLabel)} — ${escapeHtml(category.name)}</option>`);
   });
 
-  if (el.txCategory) el.txCategory.innerHTML = options.join('');
-  if (el.editTxCategory) el.editTxCategory.innerHTML = options.join('');
+  if (el.txCategory) {
+    el.txCategory.innerHTML = options.join('');
+    if (visibleCategories.some((category) => category.id === currentTxCategory)) {
+      el.txCategory.value = currentTxCategory;
+    }
+  }
+
+  if (el.editTxCategory) {
+    el.editTxCategory.innerHTML = options.join('');
+    if (visibleCategories.some((category) => category.id === currentEditTxCategory)) {
+      el.editTxCategory.value = currentEditTxCategory;
+    }
+  }
 }
 
 function getVisibleCategoriesForSelection() {
@@ -1738,6 +1783,30 @@ function formatDate(dateString) {
 
 function formatNumberForInput(value) {
   return Number(value || 0).toFixed(2).replace('.', ',');
+}
+
+function syncTransactionDateWithSelectedMonth(force = false) {
+  if (!el.txDate || !state.selectedMonth) return;
+
+  const currentValue = el.txDate.value;
+  if (!currentValue || force || !isDateInYearMonth(currentValue, state.selectedMonth)) {
+    el.txDate.value = getSuggestedTransactionDate(state.selectedMonth);
+  }
+}
+
+function getSuggestedTransactionDate(yearMonth) {
+  const today = getToday();
+  if (isDateInYearMonth(today, yearMonth)) return today;
+  return getFirstDayOfMonth(yearMonth);
+}
+
+function isDateInYearMonth(dateString, yearMonth) {
+  if (!dateString || !yearMonth) return false;
+  return String(dateString).slice(0, 7) === yearMonth;
+}
+
+function getFirstDayOfMonth(yearMonth) {
+  return `${yearMonth}-01`;
 }
 
 function getCurrentMonth() {
